@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>多益單字卡｜米米版</title>
+
+<!-- Firebase SDKs (compat v10) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F0EEFF;
+  --primary:#7C6FCD;
+  --primary-dark:#5D50B5;
+  --primary-light:#EDE9FF;
+  --accent:#F7B731;
+  --accent-light:#FFF3CD;
+  --success:#4CAF88;
+  --error:#FF6B6B;
+  --text:#2D2D3A;
+  --text-muted:#9090A8;
+  --card:#FFFFFF;
+  --shadow:0 4px 24px rgba(124,111,205,0.18);
+  --radius:20px;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  max-width:430px;
+  margin:0 auto;
+  overflow-x:hidden;
+  position:relative;
+}
+.screen{display:none;flex-direction:column;min-height:100vh;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── HEADER ─── */
+.header{
+  background:linear-gradient(135deg,#7C6FCD 0%,#9B8FE8 100%);
+  padding:52px 24px 28px;
+  color:white;
+  position:relative;
+  overflow:hidden;
+}
+.header::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+}
+.header::after{
+  content:'';position:absolute;bottom:-60px;left:-30px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+}
+.header-title{font-size:26px;font-weight:800;letter-spacing:.5px;position:relative;z-index:1}
+.header-sub{font-size:13px;opacity:.8;margin-top:3px;position:relative;z-index:1}
+.back-btn{
+  position:absolute;top:52px;left:20px;
+  background:rgba(255,255,255,.2);border:none;color:white;
+  width:36px;height:36px;border-radius:50%;font-size:18px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;
+}
+
+/* ─── CARDS ─── */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:24px;
+}
+.content{padding:20px;flex:1;display:flex;flex-direction:column;gap:16px}
+
+/* ─── HOME ─── */
+.score-card{
+  background:linear-gradient(135deg,#7C6FCD,#9B8FE8);
+  border-radius:var(--radius);padding:28px 24px;color:white;
+  box-shadow:0 8px 32px rgba(124,111,205,.35);
+  position:relative;overflow:hidden;
+}
+.score-card::before{
+  content:'🏆';position:absolute;right:20px;top:50%;
+  transform:translateY(-50%);font-size:64px;opacity:.15;
+}
+.score-label{font-size:13px;opacity:.8;margin-bottom:6px}
+.score-value{font-size:52px;font-weight:900;letter-spacing:-1px}
+.score-unit{font-size:16px;font-weight:600;opacity:.8}
+.reward-info{font-size:13px;opacity:.85;margin-top:8px;display:flex;align-items:center;gap:6px}
+
+/* Progress bar */
+.progress-section{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.progress-label{font-size:14px;font-weight:600;color:var(--text)}
+.progress-pct{font-size:13px;color:var(--primary);font-weight:700}
+.progress-bar-bg{
+  height:12px;background:#EDE9FF;border-radius:99px;overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#F7B731,#FF9A3C);
+  transition:width .6s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+}
+.progress-bar-fill::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:20px;
+  background:rgba(255,255,255,.35);border-radius:99px;
+}
+.progress-goal{font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center}
+
+/* Buttons */
+.btn{
+  border:none;border-radius:14px;font-size:16px;font-weight:700;
+  padding:16px 24px;cursor:pointer;transition:all .15s ease;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,#7C6FCD,#9B8FE8);color:white;box-shadow:0 4px 16px rgba(124,111,205,.4)}
+.btn-secondary{background:white;color:var(--primary);border:2px solid var(--primary-light)}
+.btn-success{background:linear-gradient(135deg,#4CAF88,#56D99A);color:white;box-shadow:0 4px 16px rgba(76,175,136,.35)}
+.btn-gold{background:linear-gradient(135deg,#F7B731,#FF9A3C);color:white;box-shadow:0 4px 16px rgba(247,183,49,.4)}
+.btn-sm{padding:10px 18px;font-size:14px;border-radius:10px;width:auto}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:50%;font-size:20px}
+
+/* ─── AUTH BAR ─── */
+.auth-bar{
+  background:var(--card);border-radius:16px;
+  padding:14px 18px;box-shadow:var(--shadow);
+}
+.auth-state{display:flex;align-items:center;width:100%}
+.auth-state.hidden{display:none}
+.btn-google{
+  background:white;border:1.5px solid #E0E0E0;border-radius:10px;
+  padding:11px 16px;display:flex;align-items:center;gap:10px;
+  font-size:14px;font-weight:600;color:#3C4043;cursor:pointer;
+  width:100%;justify-content:center;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+  font-family:inherit;transition:all .15s;
+}
+.btn-google:active{transform:scale(.97)}
+.btn-google .g-logo{width:18px;height:18px;flex-shrink:0}
+.auth-user{display:flex;align-items:center;gap:10px;width:100%}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;
+  border:2px solid var(--primary-light);
+  object-fit:cover;flex-shrink:0;
+  background:var(--primary-light);
+}
+.user-name{
+  flex:1;font-size:14px;font-weight:600;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;
+}
+.sync-status{
+  font-size:11px;font-weight:600;color:var(--success);
+  white-space:nowrap;
+}
+.sync-status.syncing{color:var(--text-muted)}
+.sync-status.error{color:var(--error)}
+.btn-logout{
+  background:none;border:1px solid #E0E0E0;border-radius:8px;
+  padding:5px 10px;font-size:12px;color:var(--text-muted);
+  cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;
+  flex-shrink:0;
+}
+.btn-logout:active{transform:scale(.97)}
+
+/* ─── SETUP GUIDE ─── */
+.setup-scroll{max-height:60vh;overflow-y:auto;margin-bottom:20px;text-align:left}
+.setup-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.step-num{
+  background:var(--primary);color:white;width:22px;height:22px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;
+}
+.step-text{font-size:13px;line-height:1.6;color:var(--text)}
+.step-text code{
+  background:var(--bg);padding:1px 5px;border-radius:4px;
+  font-family:monospace;font-size:11px;word-break:break-all;
+}
+.step-text a{color:var(--primary);text-decoration:none;font-weight:600}
+.rules-box{
+  background:var(--bg);border-radius:10px;padding:10px 12px;
+  font-family:monospace;font-size:11px;color:var(--text);
+  white-space:pre;overflow-x:auto;margin-top:6px;
+  line-height:1.5;
+}
+
+/* ─── GAME SCREEN ─── */
+.stage-info{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card);border-radius:14px;padding:14px 18px;
+  box-shadow:var(--shadow);
+}
+.stage-text{font-size:13px;color:var(--text-muted);font-weight:500}
+.stage-score{font-size:22px;font-weight:800;color:var(--primary)}
+.stage-score span{font-size:13px;color:var(--text-muted);font-weight:500}
+
+.word-card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:36px 28px;
+  text-align:center;position:relative;
+}
+.word-number{
+  position:absolute;top:16px;left:20px;
+  font-size:12px;color:var(--text-muted);font-weight:600;
+  background:var(--bg);padding:4px 10px;border-radius:99px;
+}
+.bookmark-btn{
+  position:absolute;top:14px;right:14px;
+  background:none;border:none;font-size:26px;cursor:pointer;
+  transition:transform .2s ease;padding:4px;
+}
+.bookmark-btn:active{transform:scale(.85)}
+.english-word{
+  font-size:36px;font-weight:900;color:var(--text);
+  letter-spacing:-1px;margin-bottom:8px;margin-top:16px;
+  font-style:italic;
+}
+.word-hint{font-size:13px;color:var(--text-muted)}
+
+.answer-input{
+  background:var(--card);border-radius:14px;
+  box-shadow:var(--shadow);padding:0;overflow:hidden;
+}
+.answer-input input{
+  width:100%;padding:18px 20px;font-size:18px;
+  border:2px solid transparent;border-radius:14px;outline:none;
+  font-family:inherit;color:var(--text);
+  transition:border-color .2s;background:transparent;
+}
+.answer-input input:focus{border-color:var(--primary)}
+.answer-input input::placeholder{color:var(--text-muted);font-size:16px}
+
+/* ─── REVEAL SCREEN ─── */
+.result-badge{
+  border-radius:16px;padding:20px 24px;text-align:center;margin-bottom:4px;
+}
+.result-badge.correct{background:linear-gradient(135deg,#E8FFF4,#D4F7E7);border:2px solid #4CAF88}
+.result-badge.wrong{background:linear-gradient(135deg,#FFF0F0,#FFE0E0);border:2px solid #FF6B6B}
+.result-icon{font-size:40px;margin-bottom:8px}
+.result-text{font-size:18px;font-weight:800}
+.result-text.correct{color:#2E9E6B}
+.result-text.wrong{color:#E84C4C}
+.result-points{font-size:14px;font-weight:600;margin-top:4px}
+.result-points.correct{color:#4CAF88}
+
+.answer-compare{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.answer-row{padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
+.answer-row+.answer-row{border-top:1px solid var(--bg)}
+.answer-tag{
+  font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;
+  white-space:nowrap;margin-top:2px;
+}
+.tag-correct{background:#E8FFF4;color:#2E9E6B}
+.tag-yours{background:var(--primary-light);color:var(--primary)}
+.answer-word{font-size:17px;font-weight:600;color:var(--text);flex:1}
+
+.word-reveal-big{
+  background:linear-gradient(135deg,var(--primary-light),#F5F3FF);
+  border-radius:16px;padding:20px 24px;text-align:center;
+}
+.word-reveal-en{font-size:32px;font-weight:900;color:var(--primary);font-style:italic}
+.word-reveal-zh{font-size:16px;color:var(--text-muted);margin-top:6px;font-weight:500}
+
+/* ─── STAGE COMPLETE ─── */
+.stage-complete-card{
+  background:linear-gradient(135deg,#7C6FCD,#9B8FE8);
+  border-radius:var(--radius);padding:36px 28px;text-align:center;
+  color:white;box-shadow:0 8px 32px rgba(124,111,205,.4);
+}
+.complete-emoji{font-size:56px;margin-bottom:12px}
+.complete-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.complete-sub{font-size:14px;opacity:.8}
+.stage-result-row{
+  display:flex;justify-content:space-between;background:var(--card);
+  border-radius:14px;padding:16px 20px;box-shadow:var(--shadow);
+}
+.result-stat{text-align:center}
+.stat-val{font-size:28px;font-weight:900;color:var(--primary)}
+.stat-label{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* ─── REWARD POPUP ─── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:24px;animation:fadeIn .2s ease;
+}
+.overlay.hidden{display:none}
+.popup{
+  background:white;border-radius:28px;padding:40px 28px;
+  text-align:center;width:100%;max-width:340px;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.popup-emoji{font-size:72px;margin-bottom:16px}
+.popup-title{font-size:26px;font-weight:900;color:var(--text);margin-bottom:8px}
+.popup-desc{font-size:15px;color:var(--text-muted);line-height:1.6;margin-bottom:28px}
+
+/* ─── NOTEBOOK ─── */
+.notebook-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:var(--text-muted);padding:40px;text-align:center;
+}
+.notebook-empty .emoji{font-size:56px}
+.notebook-list{display:flex;flex-direction:column;gap:10px}
+.notebook-item{
+  background:var(--card);border-radius:14px;padding:16px 18px;
+  box-shadow:0 2px 12px rgba(124,111,205,.1);
+  display:flex;align-items:center;gap:14px;
+}
+.notebook-icon{font-size:22px;flex-shrink:0}
+.notebook-words{flex:1}
+.notebook-en{font-size:18px;font-weight:800;color:var(--text);font-style:italic}
+.notebook-zh{font-size:14px;color:var(--text-muted);margin-top:3px}
+.notebook-tags{display:flex;gap:6px;margin-top:6px}
+.tag-small{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+.tag-bookmarked{background:#EDE9FF;color:var(--primary)}
+.tag-wrong{background:#FFE8E8;color:var(--error)}
+.clear-btn{
+  background:none;border:none;font-size:16px;color:var(--text-muted);
+  cursor:pointer;padding:4px;
+}
+
+/* ─── DOTS PROGRESS ─── */
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:4px 0}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#DDD8FF;transition:all .2s ease;
+}
+.dot.done{background:var(--primary)}
+.dot.correct-dot{background:var(--success)}
+.dot.wrong-dot{background:var(--error)}
+.dot.current{background:var(--primary);box-shadow:0 0 0 3px rgba(124,111,205,.3);transform:scale(1.2)}
+
+/* ─── TABS ─── */
+.tab-row{display:flex;background:var(--card);border-radius:12px;padding:4px;gap:4px;box-shadow:var(--shadow)}
+.tab{
+  flex:1;padding:10px;text-align:center;border-radius:9px;font-size:13px;
+  font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;border:none;background:none;
+}
+.tab.active{background:var(--primary);color:white}
+
+/* utility */
+.flex-row{display:flex;gap:12px}
+.flex-row .btn{flex:1}
+.text-muted{color:var(--text-muted);font-size:13px}
+.mt-8{margin-top:8px}
+.mt-4{margin-top:4px}
+hr.divider{border:none;border-top:1px solid var(--bg);margin:0}
+</style>
+</head>
+<body>
+
+<!-- ████ HOME SCREEN ████ -->
+<div id="screen-home" class="screen">
+  <div class="header">
+    <div class="header-title">多益單字卡 ✨</div>
+    <div class="header-sub">米米版 · TOEIC Vocabulary</div>
+  </div>
+  <div class="content">
+
+    <!-- AUTH BAR -->
+    <div class="auth-bar">
+      <!-- Logged out -->
+      <div class="auth-state" id="auth-logged-out">
+        <button class="btn-google" onclick="loginWithGoogle()">
+          <svg class="g-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          登入 Google 儲存進度
+        </button>
+      </div>
+      <!-- Logged in -->
+      <div class="auth-state hidden" id="auth-logged-in">
+        <div class="auth-user">
+          <img class="user-avatar" id="user-avatar" src="" alt="">
+          <span class="user-name" id="user-name"></span>
+          <span class="sync-status" id="sync-status">☁️ 已儲存</span>
+          <button class="btn-logout" onclick="logoutGoogle()">登出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-label">累積總分</div>
+      <div><span class="score-value" id="home-score">0</span> <span class="score-unit">分</span></div>
+      <div class="reward-info">🎁 已獲得 <span id="home-rewards">0</span> 次大餐獎勵</div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <div class="progress-label">🍽️ 距離下一頓大餐</div>
+        <div class="progress-pct" id="home-pct">0%</div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="home-progress" style="width:0%"></div>
+      </div>
+      <div class="progress-goal" id="home-progress-text">還差 3000 分！加油！</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button class="btn btn-primary" onclick="startGame()">🚀 開始挑戰</button>
+      <button class="btn btn-secondary" onclick="showScreen('notebook')">📒 錯題本與書籤</button>
+    </div>
+
+    <div id="home-stats" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--primary)" id="stat-stages">0</div>
+          <div class="text-muted mt-4">完成關卡</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--success)" id="stat-correct">0</div>
+          <div class="text-muted mt-4">答對題數</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--accent)" id="stat-acc">0%</div>
+          <div class="text-muted mt-4">正確率</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ GAME SCREEN ████ -->
+<div id="screen-game" class="screen">
+  <div class="header" style="padding-bottom:20px">
+    <button class="back-btn" onclick="confirmQuit()">←</button>
+    <div class="header-title" style="padding-left:44px">第 <span id="game-stage">1</span> 關</div>
+    <div class="header-sub" style="padding-left:44px">挑戰中 · 答對 +10 分</div>
+  </div>
+  <div class="content">
+    <div class="stage-info">
+      <div>
+        <div class="stage-text">第 <span id="game-qnum">1</span>/10 題</div>
+        <div class="dots" id="game-dots" style="margin-top:6px"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="stage-score" id="game-score">0 <span>分</span></div>
+        <div class="text-muted" style="font-size:11px">本關得分</div>
+      </div>
+    </div>
+
+    <div class="word-card">
+      <div class="word-number" id="game-word-num">#1</div>
+      <button class="bookmark-btn" id="game-bookmark" onclick="toggleBookmark()" title="加入書籤">🔖</button>
+      <div class="english-word" id="game-english">accomplish</div>
+      <div class="word-hint">輸入中文意思</div>
+    </div>
+
+    <div class="answer-input">
+      <input type="text" id="game-input" placeholder="請輸入中文翻譯…" autocomplete="off"
+        onkeydown="if(event.key==='Enter')revealAnswer()">
+    </div>
+
+    <button class="btn btn-primary" onclick="revealAnswer()" id="reveal-btn">🔍 公布答案</button>
+  </div>
+</div>
+
+<!-- ████ REVEAL SCREEN ████ -->
+<div id="screen-reveal" class="screen">
+  <div class="header" style="padding-bottom:20px">
+    <div class="header-title">答案揭曉</div>
+    <div class="header-sub">第 <span id="rv-stage">1</span> 關 · 第 <span id="rv-qnum">1</span>/10 題</div>
+  </div>
+  <div class="content">
+    <div class="result-badge" id="rv-badge">
+      <div class="result-icon" id="rv-icon">✅</div>
+      <div class="result-text" id="rv-result-text">答對了！</div>
+      <div class="result-points" id="rv-points">+10 分</div>
+    </div>
+
+    <div class="word-reveal-big">
+      <div class="word-reveal-en" id="rv-english">accomplish</div>
+      <div class="word-reveal-zh" id="rv-chinese">完成、實現</div>
+    </div>
+
+    <div class="answer-compare">
+      <div class="answer-row">
+        <span class="answer-tag tag-correct">正確答案</span>
+        <span class="answer-word" id="rv-correct-ans">完成、實現</span>
+      </div>
+      <hr class="divider">
+      <div class="answer-row">
+        <span class="answer-tag tag-yours">你的答案</span>
+        <span class="answer-word" id="rv-your-ans">—</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="nextWord()" id="next-btn">繼續下一題 →</button>
+  </div>
+</div>
+
+<!-- ████ STAGE COMPLETE ████ -->
+<div id="screen-complete" class="screen">
+  <div class="content" style="justify-content:center;padding-top:60px">
+    <div class="stage-complete-card">
+      <div class="complete-emoji">🎉</div>
+      <div class="complete-title">第 <span id="cp-stage">1</span> 關完成！</div>
+      <div class="complete-sub">本關成績揭曉</div>
+    </div>
+
+    <div class="stage-result-row">
+      <div class="result-stat">
+        <div class="stat-val" id="cp-stage-score">0</div>
+        <div class="stat-label">本關得分</div>
+      </div>
+      <div class="result-stat">
+        <div class="stat-val" id="cp-correct">0</div>
+        <div class="stat-label">答對題數</div>
+      </div>
+      <div class="result-stat">
+        <div class="stat-val" id="cp-total">0</div>
+        <div class="stat-label">累積總分</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <div class="progress-label">🍽️ 大餐進度</div>
+        <div class="progress-pct" id="cp-pct">0%</div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="cp-progress" style="width:0%"></div>
+      </div>
+      <div class="progress-goal" id="cp-goal-text">還差 3000 分</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="nextStage()">繼續下一關 🚀</button>
+    <button class="btn btn-secondary" onclick="showScreen('home')">回首頁</button>
+  </div>
+</div>
+
+<!-- ████ NOTEBOOK SCREEN ████ -->
+<div id="screen-notebook" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="header-title" style="padding-left:44px">錯題本 📒</div>
+    <div class="header-sub" style="padding-left:44px">書籤與答錯的單字</div>
+  </div>
+  <div class="content">
+    <div class="tab-row">
+      <button class="tab active" id="tab-all" onclick="switchTab('all')">全部</button>
+      <button class="tab" id="tab-bookmark" onclick="switchTab('bookmark')">🔖 書籤</button>
+      <button class="tab" id="tab-wrong" onclick="switchTab('wrong')">❌ 答錯</button>
+    </div>
+    <div id="notebook-count" class="text-muted" style="text-align:center">0 個單字</div>
+    <div id="notebook-content"></div>
+  </div>
+</div>
+
+<!-- ████ REWARD POPUP ████ -->
+<div class="overlay hidden" id="reward-overlay">
+  <div class="popup">
+    <div class="popup-emoji">🍽️🎉</div>
+    <div class="popup-title">恭喜獲得大餐！</div>
+    <div class="popup-desc">你已累積 3000 分！<br>去吃一頓大餐犒賞自己吧！<br><br>這是你第 <span id="popup-count">1</span> 次獲得獎勵 🏆</div>
+    <button class="btn btn-gold" onclick="closeReward()">太棒了！繼續加油 💪</button>
+  </div>
+</div>
+
+<!-- ████ SETUP GUIDE POPUP ████ -->
+<div class="overlay hidden" id="setup-overlay">
+  <div class="popup" style="padding:28px 24px">
+    <div class="popup-emoji" style="font-size:48px;margin-bottom:12px">🔧</div>
+    <div class="popup-title" style="font-size:20px;margin-bottom:6px">設定 Google 登入</div>
+    <div class="popup-desc" style="font-size:13px;margin-bottom:16px">需要先設定 Firebase，才能使用 Google 帳號儲存進度</div>
+    <div class="setup-scroll">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-text">前往 <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a>，用 Google 帳號登入，建立新專案</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-text">在專案中點 <b>「Authentication」</b> → 「Sign-in method」→ 啟用 <b>「Google」</b></div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-text">在專案中點 <b>「Firestore Database」</b> → 建立資料庫（選擇 production mode），然後在「規則」頁貼上：
+          <div class="rules-box">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+    }
+  }
+}</div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-text">到 <b>「專案設定」</b>（齒輪圖示）→「一般」→「你的應用程式」→ 新增 Web 應用程式，複製 <code>firebaseConfig</code> 的內容</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-text">用文字編輯器（如記事本）打開這個 HTML 檔，找到 <code>FIREBASE_CONFIG</code> 區塊，把 <code>YOUR_*</code> 的值替換成你剛剛複製的內容，存檔即可</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="closeSetup()" style="font-size:14px;padding:12px">知道了，我去設定</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// FIREBASE CONFIG
+// ════════════════════════════════════════════
+// 請參考 App 內「設定 Google 登入」的說明，
+// 將下方 YOUR_* 的值替換成你的 Firebase 專案設定。
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyC_ceJvq6qZsyYk0uzPl_iWcZnCimab80o",
+  authDomain:        "toeic-mimi0701.firebaseapp.com",
+  projectId:         "toeic-mimi0701",
+  storageBucket:     "toeic-mimi0701.firebasestorage.app",
+  messagingSenderId: "242054648327",
+  appId:             "1:242054648327:web:bcb99584797ef90a5c10a2"
+};
+
+// ════════════════════════════════════════════
+// FIREBASE INIT
+// ════════════════════════════════════════════
+const FIREBASE_CONFIGURED = !FIREBASE_CONFIG.apiKey.startsWith('YOUR_');
+
+let fbAuth = null, fbDb = null, currentUser = null;
+
+if (FIREBASE_CONFIGURED) {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth = firebase.auth();
+    fbDb   = firebase.firestore();
+
+    fbAuth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        await loadFromCloud(user.uid);
+        updateAuthUI(user);
+        updateHomeUI();
+      } else {
+        updateAuthUI(null);
+      }
+    });
+  } catch(e) {
+    console.error('Firebase init error:', e);
+  }
+}
+
+// ════════════════════════════════════════════
+// AUTH FUNCTIONS
+// ════════════════════════════════════════════
+function loginWithGoogle() {
+  if (!FIREBASE_CONFIGURED) {
+    showSetup();
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  fbAuth.signInWithPopup(provider).catch(err => {
+    console.error('Login error:', err);
+    alert('登入失敗：' + err.message);
+  });
+}
+
+function logoutGoogle() {
+  fbAuth.signOut().then(() => {
+    currentUser = null;
+    updateAuthUI(null);
+  });
+}
+
+function updateAuthUI(user) {
+  const loggedOut = document.getElementById('auth-logged-out');
+  const loggedIn  = document.getElementById('auth-logged-in');
+  if (!loggedOut || !loggedIn) return;
+
+  if (user) {
+    loggedOut.classList.add('hidden');
+    loggedIn.classList.remove('hidden');
+    const avatarEl = document.getElementById('user-avatar');
+    if (user.photoURL) avatarEl.src = user.photoURL;
+    document.getElementById('user-name').textContent = user.displayName || user.email || '使用者';
+    setSyncStatus('synced');
+  } else {
+    loggedOut.classList.remove('hidden');
+    loggedIn.classList.add('hidden');
+  }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.className = 'sync-status';
+  if (status === 'syncing') {
+    el.classList.add('syncing');
+    el.textContent = '⟳ 同步中';
+  } else if (status === 'synced') {
+    el.textContent = '☁️ 已儲存';
+  } else if (status === 'error') {
+    el.classList.add('error');
+    el.textContent = '⚠️ 同步失敗';
+  }
+}
+
+// ════════════════════════════════════════════
+// CLOUD SAVE / LOAD
+// ════════════════════════════════════════════
+async function saveToCloud(uid) {
+  if (!uid || !fbDb) return;
+  try {
+    setSyncStatus('syncing');
+    await fbDb.collection('users').doc(uid).set({
+      totalScore:      state.totalScore,
+      rewardCount:     state.rewardCount,
+      stagesCompleted: state.stagesCompleted,
+      totalCorrect:    state.totalCorrect,
+      totalAnswered:   state.totalAnswered,
+      bookmarked:      [...state.bookmarked],
+      wrongWords:      [...state.wrongWords],
+      updatedAt:       firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    setSyncStatus('synced');
+  } catch(err) {
+    console.error('Cloud save error:', err);
+    setSyncStatus('error');
+  }
+}
+
+async function loadFromCloud(uid) {
+  if (!uid || !fbDb) return;
+  try {
+    const doc = await fbDb.collection('users').doc(uid).get();
+    if (!doc.exists) {
+      // First login: upload existing local data to cloud
+      if (state.totalScore > 0 || state.bookmarked.size > 0) {
+        await saveToCloud(uid);
+      }
+      return;
+    }
+    const data = doc.data();
+    const cloudScore = data.totalScore || 0;
+    const localScore = state.totalScore;
+
+    if (cloudScore >= localScore) {
+      // Cloud is ahead (or equal): use cloud data
+      state.totalScore      = cloudScore;
+      state.rewardCount     = data.rewardCount     || 0;
+      state.stagesCompleted = data.stagesCompleted || 0;
+      state.totalCorrect    = data.totalCorrect    || 0;
+      state.totalAnswered   = data.totalAnswered   || 0;
+      state.bookmarked      = new Set(data.bookmarked  || []);
+      state.wrongWords      = new Set(data.wrongWords  || []);
+      saveLocalOnly(); // keep localStorage in sync
+    } else {
+      // Local is ahead: push local data to cloud
+      await saveToCloud(uid);
+    }
+  } catch(err) {
+    console.error('Cloud load error:', err);
+  }
+}
+
+// ════════════════════════════════════════════
+// SETUP GUIDE
+// ════════════════════════════════════════════
+function showSetup() {
+  document.getElementById('setup-overlay').classList.remove('hidden');
+}
+function closeSetup() {
+  document.getElementById('setup-overlay').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════
+// VOCABULARY DATA — 300 TOEIC words
+// ════════════════════════════════════════════
+const VOCAB = [
+  {en:"accomplish",zh:"完成、實現"},
+  {en:"acquisition",zh:"收購、習得"},
+  {en:"adjacent",zh:"鄰近的、毗連的"},
+  {en:"administer",zh:"管理、執行"},
+  {en:"agenda",zh:"議程、日程"},
+  {en:"allocate",zh:"分配、撥款"},
+  {en:"analyze",zh:"分析"},
+  {en:"annual",zh:"年度的、每年的"},
+  {en:"apologize",zh:"道歉"},
+  {en:"appoint",zh:"任命、指派"},
+  {en:"appreciate",zh:"感謝、欣賞"},
+  {en:"appropriate",zh:"適當的、合適的"},
+  {en:"approve",zh:"批准、核准"},
+  {en:"assess",zh:"評估、評定"},
+  {en:"assets",zh:"資產"},
+  {en:"assist",zh:"協助"},
+  {en:"associate",zh:"同事、聯繫"},
+  {en:"assume",zh:"假設、承擔"},
+  {en:"assure",zh:"確保、保證"},
+  {en:"authorize",zh:"授權"},
+  {en:"available",zh:"可用的、有空的"},
+  {en:"balance",zh:"平衡、結餘"},
+  {en:"benchmark",zh:"基準、標竿"},
+  {en:"benefit",zh:"福利、效益"},
+  {en:"board",zh:"董事會、上車"},
+  {en:"budget",zh:"預算"},
+  {en:"candidate",zh:"候選人"},
+  {en:"capacity",zh:"容量、能力"},
+  {en:"category",zh:"類別"},
+  {en:"circumstance",zh:"情況、環境"},
+  {en:"clarify",zh:"澄清、說明"},
+  {en:"collaborate",zh:"合作"},
+  {en:"colleague",zh:"同事"},
+  {en:"commit",zh:"承諾、投入"},
+  {en:"communicate",zh:"溝通"},
+  {en:"compensate",zh:"補償"},
+  {en:"competitive",zh:"有競爭力的"},
+  {en:"comply",zh:"遵守"},
+  {en:"comprehensive",zh:"全面的、綜合的"},
+  {en:"concentrate",zh:"專注、集中"},
+  {en:"conclude",zh:"結論、完成"},
+  {en:"conduct",zh:"進行、行為"},
+  {en:"confirm",zh:"確認"},
+  {en:"consider",zh:"考慮"},
+  {en:"consistent",zh:"一致的"},
+  {en:"contract",zh:"合約"},
+  {en:"contribute",zh:"貢獻"},
+  {en:"convenient",zh:"方便的"},
+  {en:"coordinate",zh:"協調"},
+  {en:"corporate",zh:"企業的、公司的"},
+  {en:"correspond",zh:"通信、符合"},
+  {en:"credential",zh:"資歷、證書"},
+  {en:"criteria",zh:"標準（複數）"},
+  {en:"customize",zh:"客製化"},
+  {en:"deadline",zh:"截止日期"},
+  {en:"decline",zh:"拒絕、下降"},
+  {en:"delegate",zh:"委派、代表"},
+  {en:"demonstrate",zh:"示範、展示"},
+  {en:"department",zh:"部門"},
+  {en:"deposit",zh:"存款、訂金"},
+  {en:"description",zh:"描述"},
+  {en:"determine",zh:"確定、決定"},
+  {en:"develop",zh:"開發、發展"},
+  {en:"discount",zh:"折扣"},
+  {en:"distribute",zh:"分發、配送"},
+  {en:"document",zh:"文件、記錄"},
+  {en:"effective",zh:"有效的"},
+  {en:"efficient",zh:"效率高的"},
+  {en:"eligible",zh:"有資格的"},
+  {en:"eliminate",zh:"消除"},
+  {en:"emphasis",zh:"強調"},
+  {en:"encourage",zh:"鼓勵"},
+  {en:"enhance",zh:"提升、增強"},
+  {en:"establish",zh:"建立、創立"},
+  {en:"evaluate",zh:"評估"},
+  {en:"exception",zh:"例外"},
+  {en:"executive",zh:"主管、行政的"},
+  {en:"exhibit",zh:"展示、展覽"},
+  {en:"expand",zh:"擴展"},
+  {en:"expertise",zh:"專業知識"},
+  {en:"facilitate",zh:"促進、協助"},
+  {en:"feasible",zh:"可行的"},
+  {en:"financial",zh:"財務的"},
+  {en:"flexible",zh:"彈性的"},
+  {en:"forecast",zh:"預測"},
+  {en:"foundation",zh:"基礎、基金會"},
+  {en:"function",zh:"功能、運作"},
+  {en:"generate",zh:"產生"},
+  {en:"guideline",zh:"指導方針"},
+  {en:"handle",zh:"處理"},
+  {en:"headquarters",zh:"總部"},
+  {en:"implement",zh:"實施、執行"},
+  {en:"improve",zh:"改善"},
+  {en:"incentive",zh:"激勵、獎勵"},
+  {en:"indicate",zh:"指出、表示"},
+  {en:"initiative",zh:"主動性、倡議"},
+  {en:"inspect",zh:"檢查"},
+  {en:"institute",zh:"機構、設立"},
+  {en:"integrate",zh:"整合"},
+  {en:"interact",zh:"互動"},
+  {en:"invoice",zh:"發票"},
+  {en:"involve",zh:"涉及、參與"},
+  {en:"issue",zh:"議題、發行"},
+  {en:"leadership",zh:"領導力"},
+  {en:"maintain",zh:"維持、維護"},
+  {en:"manage",zh:"管理"},
+  {en:"market",zh:"市場、行銷"},
+  {en:"measure",zh:"測量、措施"},
+  {en:"negotiate",zh:"談判、協商"},
+  {en:"objective",zh:"目標、客觀的"},
+  {en:"operate",zh:"操作、運營"},
+  {en:"opportunity",zh:"機會"},
+  {en:"organize",zh:"組織、整理"},
+  {en:"outstanding",zh:"傑出的、未解決的"},
+  {en:"overcome",zh:"克服"},
+  {en:"perform",zh:"執行、表現"},
+  {en:"policy",zh:"政策"},
+  {en:"potential",zh:"潛力、潛在的"},
+  {en:"priority",zh:"優先事項"},
+  {en:"procedure",zh:"程序、步驟"},
+  {en:"productive",zh:"有生產力的"},
+  {en:"professional",zh:"專業的"},
+  {en:"progress",zh:"進度、進展"},
+  {en:"promote",zh:"晉升、推廣"},
+  {en:"propose",zh:"提議"},
+  {en:"purchase",zh:"購買"},
+  {en:"qualify",zh:"符合資格"},
+  {en:"recommend",zh:"推薦"},
+  {en:"record",zh:"記錄"},
+  {en:"reduce",zh:"減少"},
+  {en:"refer",zh:"參考、推薦"},
+  {en:"regulation",zh:"規定、法規"},
+  {en:"relevant",zh:"相關的"},
+  {en:"requirement",zh:"要求、需求"},
+  {en:"responsibility",zh:"責任"},
+  {en:"retain",zh:"保留、留住"},
+  {en:"revenue",zh:"收入、營收"},
+  {en:"review",zh:"審查、評論"},
+  {en:"revise",zh:"修改、修訂"},
+  {en:"schedule",zh:"時程、安排"},
+  {en:"significant",zh:"重要的、顯著的"},
+  {en:"solution",zh:"解決方案"},
+  {en:"strategy",zh:"策略"},
+  {en:"submit",zh:"提交"},
+  {en:"succeed",zh:"成功"},
+  {en:"supervise",zh:"監督"},
+  {en:"supply",zh:"供應"},
+  {en:"support",zh:"支援、支持"},
+  {en:"survey",zh:"調查"},
+  {en:"sustainable",zh:"可持續的"},
+  {en:"target",zh:"目標"},
+  {en:"technical",zh:"技術的"},
+  {en:"terminate",zh:"終止"},
+  {en:"transaction",zh:"交易"},
+  {en:"transfer",zh:"轉移、調職"},
+  {en:"update",zh:"更新"},
+  {en:"utilize",zh:"利用、使用"},
+  {en:"vacant",zh:"空缺的"},
+  {en:"verify",zh:"核實、驗證"},
+  {en:"warranty",zh:"保固、保證"},
+  {en:"abundant",zh:"豐富的、充裕的"},
+  {en:"accurate",zh:"準確的"},
+  {en:"adequate",zh:"足夠的、適當的"},
+  {en:"administration",zh:"行政、管理"},
+  {en:"admission",zh:"入場、承認"},
+  {en:"advance",zh:"預付、進步"},
+  {en:"adverse",zh:"不利的、負面的"},
+  {en:"affiliate",zh:"附屬機構"},
+  {en:"amendment",zh:"修正案、修改"},
+  {en:"anticipate",zh:"預期、預料"},
+  {en:"application",zh:"申請、應用程式"},
+  {en:"appointment",zh:"約會、任命"},
+  {en:"appreciation",zh:"感謝、增值"},
+  {en:"audit",zh:"審計、稽核"},
+  {en:"bilateral",zh:"雙邊的"},
+  {en:"bonus",zh:"獎金"},
+  {en:"capital",zh:"資本、首都"},
+  {en:"catastrophe",zh:"災難"},
+  {en:"caution",zh:"謹慎、警告"},
+  {en:"circulation",zh:"流通、發行量"},
+  {en:"commerce",zh:"商業"},
+  {en:"commission",zh:"佣金、委員會"},
+  {en:"commitment",zh:"承諾、投入"},
+  {en:"commodity",zh:"商品、大宗物資"},
+  {en:"compensation",zh:"補償、薪酬"},
+  {en:"competition",zh:"競爭"},
+  {en:"complaint",zh:"投訴"},
+  {en:"compliance",zh:"合規、遵守"},
+  {en:"concession",zh:"讓步、優惠"},
+  {en:"confidential",zh:"機密的"},
+  {en:"confirmation",zh:"確認"},
+  {en:"consultant",zh:"顧問"},
+  {en:"controversy",zh:"爭議"},
+  {en:"cooperation",zh:"合作"},
+  {en:"corporation",zh:"公司、法人"},
+  {en:"coverage",zh:"覆蓋範圍、保險範圍"},
+  {en:"currency",zh:"貨幣"},
+  {en:"deficit",zh:"赤字、虧損"},
+  {en:"delinquent",zh:"拖欠的、違規的"},
+  {en:"demand",zh:"需求、要求"},
+  {en:"demographic",zh:"人口統計的"},
+  {en:"depreciation",zh:"折舊、貶值"},
+  {en:"designated",zh:"指定的"},
+  {en:"distinction",zh:"區別、卓越"},
+  {en:"dividend",zh:"股息"},
+  {en:"duration",zh:"持續時間"},
+  {en:"endorsement",zh:"背書、認可"},
+  {en:"entrepreneur",zh:"企業家"},
+  {en:"environment",zh:"環境"},
+  {en:"equity",zh:"股權、公平"},
+  {en:"exceed",zh:"超過"},
+  {en:"exclusive",zh:"獨家的、高級的"},
+  {en:"expenditure",zh:"支出、費用"},
+  {en:"fiscal",zh:"財政的"},
+  {en:"fluctuate",zh:"波動"},
+  {en:"franchise",zh:"特許經營權"},
+  {en:"global",zh:"全球的"},
+  {en:"guarantee",zh:"保證、擔保"},
+  {en:"hierarchy",zh:"層級制度"},
+  {en:"hospitality",zh:"款待、好客"},
+  {en:"import",zh:"進口、重要性"},
+  {en:"inflation",zh:"通貨膨脹"},
+  {en:"infrastructure",zh:"基礎設施"},
+  {en:"inquiry",zh:"詢問、調查"},
+  {en:"installment",zh:"分期付款"},
+  {en:"insurance",zh:"保險"},
+  {en:"inventory",zh:"存貨、庫存"},
+  {en:"investment",zh:"投資"},
+  {en:"itinerary",zh:"行程"},
+  {en:"jurisdiction",zh:"管轄權"},
+  {en:"layoff",zh:"裁員"},
+  {en:"lease",zh:"租約"},
+  {en:"liability",zh:"責任、負債"},
+  {en:"logistics",zh:"物流"},
+  {en:"lucrative",zh:"有利可圖的"},
+  {en:"magnitude",zh:"規模、大小"},
+  {en:"mandatory",zh:"強制的"},
+  {en:"merger",zh:"合併"},
+  {en:"momentum",zh:"動力、勢頭"},
+  {en:"monitor",zh:"監控、螢幕"},
+  {en:"morale",zh:"士氣"},
+  {en:"mortgage",zh:"抵押貸款"},
+  {en:"mutual",zh:"相互的"},
+  {en:"notify",zh:"通知"},
+  {en:"obligation",zh:"義務"},
+  {en:"occupancy",zh:"入住率、占用"},
+  {en:"outcome",zh:"結果、成果"},
+  {en:"overhead",zh:"管理費用"},
+  {en:"partnership",zh:"合夥關係"},
+  {en:"pension",zh:"退休金"},
+  {en:"perception",zh:"認知、看法"},
+  {en:"portfolio",zh:"投資組合、作品集"},
+  {en:"preliminary",zh:"初步的、準備的"},
+  {en:"prestigious",zh:"有聲望的"},
+  {en:"productivity",zh:"生產力"},
+  {en:"proficiency",zh:"熟練度"},
+  {en:"prohibition",zh:"禁止"},
+  {en:"prospective",zh:"未來的、有望的"},
+  {en:"protocol",zh:"協定、規範"},
+  {en:"provision",zh:"條款、準備"},
+  {en:"pursue",zh:"追求"},
+  {en:"quota",zh:"配額"},
+  {en:"recipient",zh:"收件人、接受者"},
+  {en:"reconcile",zh:"調和、核對"},
+  {en:"recruit",zh:"招募"},
+  {en:"reimbursement",zh:"報銷"},
+  {en:"reliable",zh:"可靠的"},
+  {en:"relocate",zh:"遷移、搬遷"},
+  {en:"remittance",zh:"匯款"},
+  {en:"renowned",zh:"著名的"},
+  {en:"reputation",zh:"聲譽"},
+  {en:"resignation",zh:"辭職"},
+  {en:"resolution",zh:"決議、解決"},
+  {en:"restructure",zh:"重組"},
+  {en:"revision",zh:"修訂"},
+  {en:"rival",zh:"競爭對手"},
+  {en:"shareholder",zh:"股東"},
+  {en:"sophisticated",zh:"複雜的、精明的"},
+  {en:"specification",zh:"規格、說明書"},
+  {en:"statistics",zh:"統計數據"},
+  {en:"stimulate",zh:"刺激、促進"},
+  {en:"streamline",zh:"精簡化、流線型"},
+  {en:"subsidiary",zh:"子公司"},
+  {en:"supplement",zh:"補充、增刊"},
+  {en:"tentative",zh:"暫定的、試探性的"},
+  {en:"transition",zh:"過渡、轉型"},
+  {en:"accumulate",zh:"累積"},
+  {en:"acquire",zh:"獲得、收購"},
+  {en:"adapt",zh:"適應"},
+  {en:"ambiguous",zh:"模糊的、不明確的"},
+  {en:"anticipation",zh:"預期、期待"},
+  {en:"approval",zh:"核准、贊同"},
+  {en:"arbitrary",zh:"任意的、專橫的"},
+  {en:"archive",zh:"存檔、檔案"},
+  {en:"aspire",zh:"渴望、志向"},
+  {en:"brochure",zh:"小冊子"},
+  {en:"bureaucracy",zh:"官僚體制"},
+  {en:"commute",zh:"通勤"},
+  {en:"compile",zh:"彙編、整理"},
+  {en:"concise",zh:"簡潔的"},
+  {en:"confidentiality",zh:"保密性"},
+  {en:"congestion",zh:"壅塞"},
+  {en:"consecutively",zh:"連續地"},
+  {en:"consolidate",zh:"整合、加強"},
+  {en:"contingency",zh:"應急計畫、偶發事件"},
+  {en:"contractor",zh:"承包商"},
+  {en:"convene",zh:"召開、集合"},
+  {en:"critical",zh:"關鍵的、批判的"},
+  {en:"cutback",zh:"削減"},
+  {en:"deficiency",zh:"缺乏、不足"},
+  {en:"density",zh:"密度"},
+  {en:"diligent",zh:"勤奮的"},
+  {en:"dispatch",zh:"派遣、發送"},
+  {en:"domain",zh:"領域、域名"},
+  {en:"dominant",zh:"主導的"},
+  {en:"draft",zh:"草稿、起草"},
+  {en:"enclose",zh:"隨附、附上"},
+  {en:"encompass",zh:"涵蓋、包含"},
+  {en:"enterprise",zh:"企業、事業"},
+  {en:"equivalent",zh:"等值的、相等物"},
+  {en:"expedite",zh:"加速、加快"},
+  {en:"explicit",zh:"明確的"},
+  {en:"expiration",zh:"到期、截止"},
+  {en:"exposure",zh:"曝光、接觸"},
+  {en:"factor",zh:"因素、要素"},
+  {en:"fluctuation",zh:"波動"},
+  {en:"forthcoming",zh:"即將到來的"},
+  {en:"freelance",zh:"自由業"},
+  {en:"fulfill",zh:"履行、實現"},
+  {en:"generic",zh:"通用的"},
+  {en:"grant",zh:"授予、補助"},
+  {en:"incentivize",zh:"給予激勵"},
+  {en:"incumbent",zh:"現任的"},
+  {en:"inevitable",zh:"不可避免的"},
+  {en:"innovation",zh:"創新"},
+  {en:"interim",zh:"臨時的、過渡期"},
+  {en:"keynote",zh:"主旨演講"},
+  {en:"leverage",zh:"槓桿、利用"},
+  {en:"liaison",zh:"聯絡人、協調"},
+  {en:"mediocre",zh:"平庸的"},
+  {en:"methodology",zh:"方法論"},
+  {en:"milestone",zh:"里程碑"},
+  {en:"minimize",zh:"最小化"},
+  {en:"mitigate",zh:"緩解、減輕"},
+  {en:"multitask",zh:"多工處理"},
+  {en:"negligible",zh:"可忽略的"},
+  {en:"network",zh:"人脈、網路"},
+  {en:"optimize",zh:"最佳化"},
+  {en:"outreach",zh:"外展活動"},
+  {en:"outsource",zh:"外包"},
+  {en:"overdue",zh:"逾期的"},
+  {en:"participant",zh:"參與者"},
+  {en:"pending",zh:"待定的"},
+  {en:"personnel",zh:"人員、人事"},
+  {en:"petition",zh:"請願、申請"},
+  {en:"pivotal",zh:"關鍵的"},
+  {en:"placeholder",zh:"佔位符"},
+  {en:"plausible",zh:"看似合理的"},
+  {en:"postulate",zh:"假設、假定"},
+  {en:"precaution",zh:"預防措施"},
+  {en:"precedent",zh:"先例"},
+  {en:"proactive",zh:"積極主動的"},
+  {en:"profitability",zh:"獲利能力"},
+  {en:"projection",zh:"預測、預計"},
+  {en:"quarterly",zh:"每季的"},
+  {en:"readjust",zh:"重新調整"},
+  {en:"rebound",zh:"反彈"},
+  {en:"receptionist",zh:"接待員"},
+  {en:"renegotiate",zh:"重新談判"},
+  {en:"replenish",zh:"補充"},
+  {en:"residential",zh:"住宅的"},
+  {en:"resilient",zh:"有韌性的"},
+  {en:"retrofit",zh:"翻新、改裝"},
+  {en:"scrutinize",zh:"仔細審查"},
+  {en:"sector",zh:"部門、產業"},
+  {en:"segmentation",zh:"市場區隔"},
+  {en:"sequential",zh:"順序的"},
+  {en:"shortfall",zh:"缺口、短缺"},
+  {en:"simultaneous",zh:"同時的"},
+  {en:"stakeholder",zh:"利害關係人"},
+  {en:"stipulate",zh:"規定、明定"},
+  {en:"substantial",zh:"大量的、實質的"},
+  {en:"succession",zh:"繼任、連續"},
+  {en:"surpass",zh:"超越"},
+  {en:"systematically",zh:"有系統地"},
+  {en:"thorough",zh:"徹底的"},
+  {en:"transparency",zh:"透明度"},
+  {en:"turnover",zh:"營業額、離職率"},
+  {en:"unanimous",zh:"一致同意的"},
+  {en:"undermine",zh:"削弱"},
+  {en:"universal",zh:"普遍的"},
+  {en:"urgency",zh:"緊迫性"},
+  {en:"venture",zh:"冒險、創業"},
+  {en:"viable",zh:"可行的"},
+  {en:"volatile",zh:"不穩定的"},
+  {en:"workforce",zh:"勞動力"},
+  {en:"yield",zh:"產出、收益"},
+];
+
+// Deduplicate
+const seen = new Set();
+const WORDS = VOCAB.filter(w => {
+  if(seen.has(w.en)){return false;}
+  seen.add(w.en);return true;
+});
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const REWARD_GOAL = 3000;
+const WORDS_PER_STAGE = 10;
+
+let state = {
+  totalScore: 0,
+  rewardCount: 0,
+  stagesCompleted: 0,
+  totalCorrect: 0,
+  totalAnswered: 0,
+  bookmarked: new Set(),
+  wrongWords: new Set(),
+  // current game
+  stageNum: 1,
+  stageWords: [],
+  stageWordIdx: 0,
+  stageScore: 0,
+  stageCorrects: 0,
+  stageResults: [],
+  stageBookmarked: new Set(),
+  currentUserAnswer: '',
+  currentIsCorrect: false,
+};
+
+function saveLocalOnly() {
+  const s = {...state,
+    bookmarked: [...state.bookmarked],
+    wrongWords: [...state.wrongWords],
+    stageBookmarked: [...state.stageBookmarked],
+  };
+  localStorage.setItem('toeic_mimi_state', JSON.stringify(s));
+}
+
+function saveState() {
+  saveLocalOnly();
+  if (currentUser) {
+    saveToCloud(currentUser.uid);
+  }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('toeic_mimi_state');
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    state = {...state,...s,
+      bookmarked: new Set(s.bookmarked||[]),
+      wrongWords: new Set(s.wrongWords||[]),
+      stageBookmarked: new Set(s.stageBookmarked||[]),
+    };
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════
+// ANSWER COMPARISON (smart fuzzy)
+// ════════════════════════════════════════════
+function normalize(str){
+  return str.trim()
+    .replace(/[，。、！？\s「」【】（）()]/g,'')
+    .toLowerCase();
+}
+function compareAnswers(userAns, correctAns){
+  if(!userAns || userAns.trim().length === 0) return false;
+  const u = normalize(userAns);
+  const c = normalize(correctAns);
+  if(!u) return false;
+  if(u === c) return true;
+  const segments = correctAns.split(/[、，\/]/);
+  for(const seg of segments){
+    const sn = normalize(seg);
+    if(!sn) continue;
+    if(u === sn) return true;
+    if(sn.length >= 2 && u.includes(sn)) return true;
+    if(u.length >= 2 && sn.includes(u)) return true;
+  }
+  const chars = [...c];
+  const overlap = [...u].filter(ch => chars.includes(ch)).length;
+  const ratio = overlap / Math.max(u.length, c.length);
+  if(ratio >= 0.65 && u.length >= 2) return true;
+  return false;
+}
+
+// ════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════════
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='home') updateHomeUI();
+  if(name==='notebook') renderNotebook();
+}
+
+// ════════════════════════════════════════════
+// HOME UI
+// ════════════════════════════════════════════
+function updateHomeUI(){
+  document.getElementById('home-score').textContent = state.totalScore.toLocaleString();
+  document.getElementById('home-rewards').textContent = state.rewardCount;
+
+  const progressInCycle = state.totalScore % REWARD_GOAL;
+  const pct = Math.round(progressInCycle / REWARD_GOAL * 100);
+  document.getElementById('home-pct').textContent = pct + '%';
+  document.getElementById('home-progress').style.width = pct + '%';
+  const remaining = REWARD_GOAL - progressInCycle;
+  document.getElementById('home-progress-text').textContent =
+    progressInCycle === 0 && state.totalScore > 0
+      ? '🎊 剛完成一次循環！繼續累積吧！'
+      : `還差 ${remaining.toLocaleString()} 分可獲得大餐！`;
+
+  const statsEl = document.getElementById('home-stats');
+  if(state.stagesCompleted > 0){
+    statsEl.style.display = 'block';
+    document.getElementById('stat-stages').textContent = state.stagesCompleted;
+    document.getElementById('stat-correct').textContent = state.totalCorrect;
+    const acc = state.totalAnswered > 0 ? Math.round(state.totalCorrect/state.totalAnswered*100) : 0;
+    document.getElementById('stat-acc').textContent = acc + '%';
+  }
+}
+
+// ════════════════════════════════════════════
+// GAME LOGIC
+// ════════════════════════════════════════════
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startGame(){
+  const indices = shuffle([...Array(WORDS.length).keys()]).slice(0, WORDS_PER_STAGE);
+  state.stageWords = indices;
+  state.stageWordIdx = 0;
+  state.stageScore = 0;
+  state.stageCorrects = 0;
+  state.stageResults = [];
+  state.stageBookmarked = new Set();
+  state.stageNum = state.stagesCompleted + 1;
+  showScreen('game');
+  renderGameWord();
+}
+
+function renderGameWord(){
+  const idx = state.stageWords[state.stageWordIdx];
+  const word = WORDS[idx];
+  document.getElementById('game-stage').textContent = state.stageNum;
+  document.getElementById('game-qnum').textContent = state.stageWordIdx + 1;
+  document.getElementById('game-word-num').textContent = '#' + (idx+1);
+  document.getElementById('game-english').textContent = word.en;
+  document.getElementById('game-score').innerHTML = state.stageScore + ' <span>分</span>';
+  document.getElementById('game-input').value = '';
+  document.getElementById('game-input').focus();
+
+  const isBookmarked = state.bookmarked.has(idx) || state.stageBookmarked.has(idx);
+  document.getElementById('game-bookmark').textContent = '🔖';
+  document.getElementById('game-bookmark').style.opacity = isBookmarked ? '1' : '0.35';
+
+  renderDots();
+}
+
+function renderDots(){
+  const container = document.getElementById('game-dots');
+  container.innerHTML = '';
+  for(let i=0; i<WORDS_PER_STAGE; i++){
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    if(i < state.stageWordIdx){
+      dot.classList.add(state.stageResults[i] === 'correct' ? 'correct-dot' : 'wrong-dot');
+    } else if(i === state.stageWordIdx){
+      dot.classList.add('current');
+    }
+    container.appendChild(dot);
+  }
+}
+
+function toggleBookmark(){
+  const idx = state.stageWords[state.stageWordIdx];
+  if(state.stageBookmarked.has(idx)){
+    state.stageBookmarked.delete(idx);
+    state.bookmarked.delete(idx);
+    document.getElementById('game-bookmark').style.opacity = '0.35';
+  } else {
+    state.stageBookmarked.add(idx);
+    state.bookmarked.add(idx);
+    document.getElementById('game-bookmark').style.opacity = '1';
+    const btn = document.getElementById('game-bookmark');
+    btn.style.transform = 'scale(1.4)';
+    setTimeout(()=>btn.style.transform='',200);
+  }
+  saveState();
+}
+
+function revealAnswer(){
+  const idx = state.stageWords[state.stageWordIdx];
+  const word = WORDS[idx];
+  const userAns = document.getElementById('game-input').value.trim();
+  const isCorrect = compareAnswers(userAns, word.zh);
+
+  state.currentIsCorrect = isCorrect;
+  state.currentUserAnswer = userAns;
+  state.stageResults.push(isCorrect ? 'correct' : 'wrong');
+
+  if(isCorrect){
+    state.stageScore += 10;
+    state.stageCorrects++;
+    state.totalCorrect++;
+  } else {
+    state.wrongWords.add(idx);
+    if(!state.stageBookmarked.has(idx)){
+      state.bookmarked.add(idx);
+    }
+  }
+  state.totalAnswered++;
+
+  document.getElementById('rv-stage').textContent = state.stageNum;
+  document.getElementById('rv-qnum').textContent = state.stageWordIdx + 1;
+  document.getElementById('rv-english').textContent = word.en;
+  document.getElementById('rv-chinese').textContent = word.zh;
+  document.getElementById('rv-correct-ans').textContent = word.zh;
+  document.getElementById('rv-your-ans').textContent = userAns || '（未作答）';
+
+  const badge = document.getElementById('rv-badge');
+  const icon = document.getElementById('rv-icon');
+  const resultText = document.getElementById('rv-result-text');
+  const points = document.getElementById('rv-points');
+
+  if(isCorrect){
+    badge.className = 'result-badge correct';
+    icon.textContent = '✅';
+    resultText.className = 'result-text correct';
+    resultText.textContent = '答對了！太棒了！';
+    points.className = 'result-points correct';
+    points.textContent = '+10 分';
+  } else {
+    badge.className = 'result-badge wrong';
+    icon.textContent = '❌';
+    resultText.className = 'result-text wrong';
+    resultText.textContent = userAns ? '答錯了，再加油！' : '沒有作答喔！';
+    points.className = 'result-points';
+    points.style.color = 'var(--error)';
+    points.textContent = '+0 分・已加入錯題本';
+  }
+
+  const isLastWord = state.stageWordIdx === WORDS_PER_STAGE - 1;
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.textContent = isLastWord ? '查看本關成績 🏁' : '繼續下一題 →';
+
+  saveState();
+  showScreen('reveal');
+}
+
+function nextWord(){
+  const isLast = state.stageWordIdx === WORDS_PER_STAGE - 1;
+  state.stageWordIdx++;
+
+  if(isLast){
+    state.stagesCompleted++;
+    state.totalScore += state.stageScore;
+
+    const prevCycle = Math.floor((state.totalScore - state.stageScore) / REWARD_GOAL);
+    const newCycle  = Math.floor(state.totalScore / REWARD_GOAL);
+    const gotReward = newCycle > prevCycle;
+
+    saveState();
+    showStageComplete(gotReward, newCycle);
+  } else {
+    showScreen('game');
+    renderGameWord();
+  }
+}
+
+function showStageComplete(gotReward, rewardCount){
+  document.getElementById('cp-stage').textContent = state.stageNum;
+  document.getElementById('cp-stage-score').textContent = state.stageScore;
+  document.getElementById('cp-correct').textContent = state.stageCorrects;
+  document.getElementById('cp-total').textContent = state.totalScore.toLocaleString();
+
+  const progressInCycle = state.totalScore % REWARD_GOAL;
+  const pct = Math.round(progressInCycle / REWARD_GOAL * 100);
+  document.getElementById('cp-pct').textContent = pct + '%';
+  document.getElementById('cp-progress').style.width = pct + '%';
+  const remaining = REWARD_GOAL - progressInCycle;
+  document.getElementById('cp-goal-text').textContent =
+    gotReward ? '🎊 剛完成一次循環！繼續累積！' : `還差 ${remaining.toLocaleString()} 分`;
+
+  showScreen('complete');
+
+  if(gotReward){
+    state.rewardCount = rewardCount;
+    saveState();
+    setTimeout(()=>showReward(rewardCount), 600);
+  }
+}
+
+function nextStage(){ startGame(); }
+
+function showReward(count){
+  document.getElementById('popup-count').textContent = count;
+  document.getElementById('reward-overlay').classList.remove('hidden');
+}
+function closeReward(){
+  document.getElementById('reward-overlay').classList.add('hidden');
+}
+
+function confirmQuit(){
+  if(state.stageWordIdx === 0 || confirm('確定要放棄這關？（進度不計分）')){
+    showScreen('home');
+  }
+}
+
+// ════════════════════════════════════════════
+// NOTEBOOK
+// ════════════════════════════════════════════
+let currentTab = 'all';
+
+function switchTab(tab){
+  currentTab = tab;
+  ['all','bookmark','wrong'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  renderNotebook();
+}
+
+function renderNotebook(){
+  const container = document.getElementById('notebook-content');
+  const countEl   = document.getElementById('notebook-count');
+
+  let items = [];
+  if(currentTab === 'all'){
+    const allIdx = new Set([...state.bookmarked, ...state.wrongWords]);
+    items = [...allIdx].map(i=>({idx:i, isBookmarked: state.bookmarked.has(i), isWrong: state.wrongWords.has(i)}));
+  } else if(currentTab === 'bookmark'){
+    items = [...state.bookmarked].map(i=>({idx:i, isBookmarked:true, isWrong: state.wrongWords.has(i)}));
+  } else {
+    items = [...state.wrongWords].map(i=>({idx:i, isBookmarked: state.bookmarked.has(i), isWrong:true}));
+  }
+
+  countEl.textContent = items.length + ' 個單字';
+
+  if(items.length === 0){
+    container.innerHTML = `
+      <div class="notebook-empty">
+        <div class="emoji">📭</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text)">這裡空空的</div>
+        <div>書籤和錯題都會出現在這裡</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  const list = document.createElement('div');
+  list.className = 'notebook-list';
+  items.forEach(({idx, isBookmarked, isWrong})=>{
+    const word = WORDS[idx];
+    const item = document.createElement('div');
+    item.className = 'notebook-item';
+    const tags = [];
+    if(isBookmarked && !isWrong) tags.push('<span class="tag-small tag-bookmarked">🔖 書籤</span>');
+    if(isWrong) tags.push('<span class="tag-small tag-wrong">❌ 錯題</span>');
+    if(isBookmarked && isWrong) tags.push('<span class="tag-small tag-bookmarked">🔖</span>');
+
+    item.innerHTML = `
+      <div class="notebook-icon">${isWrong?'❌':'🔖'}</div>
+      <div class="notebook-words">
+        <div class="notebook-en">${word.en}</div>
+        <div class="notebook-zh">${word.zh}</div>
+        <div class="notebook-tags">${tags.join('')}</div>
+      </div>
+      <button class="clear-btn" onclick="removeFromNotebook(${idx})" title="移除">✕</button>
+    `;
+    list.appendChild(item);
+  });
+  container.appendChild(list);
+}
+
+function removeFromNotebook(idx){
+  state.bookmarked.delete(idx);
+  state.wrongWords.delete(idx);
+  saveState();
+  renderNotebook();
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+loadState();
+showScreen('home');
+// updateAuthUI called by onAuthStateChanged after Firebase resolves;
+// show logged-out state initially
+updateAuthUI(null);
+</script>
+</body>
+</html>
