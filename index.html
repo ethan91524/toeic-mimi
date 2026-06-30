@@ -344,6 +344,2280 @@ body{
 }
 .tab.active{background:var(--primary);color:white}
 
+/* ─── POS BADGE ─── */
+.pos-badge{
+  display:inline-block;font-size:12px;font-weight:700;
+  color:var(--primary);background:var(--primary-light);
+  padding:2px 8px;border-radius:6px;margin-bottom:8px;
+  letter-spacing:.3px;
+}
+
+/* ─── EXAMPLE CARD ─── */
+.example-card{
+  background:linear-gradient(135deg,#F5F3FF,#EDE9FF);
+  border-radius:14px;padding:16px 18px;
+  border-left:4px solid var(--primary);
+}
+.example-label{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;letter-spacing:.5px}
+.example-text{font-size:14px;color:var(--text);line-height:1.7}
+.example-text em{font-style:italic;color:var(--primary);font-weight:700}
+
+/* utility */
+.flex-row{display:flex;gap:12px}
+.flex-row .btn{flex:1}
+.text-muted{color:var(--text-muted);font-size:13px}
+.mt-8{margin-top:8px}
+.mt-4{margin-top:4px}
+hr.divider{border:none;border-top:1px solid var(--bg);margin:0}
+</style>
+</head>
+<body>
+
+<!-- ████ HOME SCREEN ████ -->
+<div id="screen-home" class="screen">
+  <div class="header">
+    <div class="header-title">多益單字卡 ✨</div>
+    <div class="header-sub">米米版 · TOEIC Vocabulary</div>
+  </div>
+  <div class="content">
+
+    <!-- AUTH BAR -->
+    <div class="auth-bar">
+      <!-- Logged out -->
+      <div class="auth-state" id="auth-logged-out">
+        <button class="btn-google" onclick="loginWithGoogle()">
+          <svg class="g-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          登入 Google 儲存進度
+        </button>
+      </div>
+      <!-- Logged in -->
+      <div class="auth-state hidden" id="auth-logged-in">
+        <div class="auth-user">
+          <img class="user-avatar" id="user-avatar" src="" alt="">
+          <span class="user-name" id="user-name"></span>
+          <span class="sync-status" id="sync-status">☁️ 已儲存</span>
+          <button class="btn-logout" onclick="logoutGoogle()">登出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-label">累積總分</div>
+      <div><span class="score-value" id="home-score">0</span> <span class="score-unit">分</span></div>
+      <div class="reward-info">🎁 已獲得 <span id="home-rewards">0</span> 次大餐獎勵</div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <div class="progress-label">🍽️ 距離下一頓大餐</div>
+        <div class="progress-pct" id="home-pct">0%</div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="home-progress" style="width:0%"></div>
+      </div>
+      <div class="progress-goal" id="home-progress-text">還差 3000 分！加油！</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button class="btn btn-primary" onclick="startGame()">🚀 開始挑戰</button>
+      <button class="btn btn-secondary" onclick="showScreen('notebook')">📒 錯題本與書籤</button>
+    </div>
+
+    <div id="home-stats" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between">
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--primary)" id="stat-stages">0</div>
+          <div class="text-muted mt-4">完成關卡</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--success)" id="stat-correct">0</div>
+          <div class="text-muted mt-4">答對題數</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--accent)" id="stat-acc">0%</div>
+          <div class="text-muted mt-4">正確率</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ GAME SCREEN ████ -->
+<div id="screen-game" class="screen">
+  <div class="header" style="padding-bottom:20px">
+    <button class="back-btn" onclick="confirmQuit()">←</button>
+    <div class="header-title" style="padding-left:44px">第 <span id="game-stage">1</span> 關</div>
+    <div class="header-sub" style="padding-left:44px">挑戰中 · 答對 +10 分</div>
+  </div>
+  <div class="content">
+    <div class="stage-info">
+      <div>
+        <div class="stage-text">第 <span id="game-qnum">1</span>/10 題</div>
+        <div class="dots" id="game-dots" style="margin-top:6px"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="stage-score" id="game-score">0 <span>分</span></div>
+        <div class="text-muted" style="font-size:11px">本關得分</div>
+      </div>
+    </div>
+
+    <div class="word-card">
+      <div class="word-number" id="game-word-num">#1</div>
+      <button class="bookmark-btn" id="game-bookmark" onclick="toggleBookmark()" title="加入書籤">🔖</button>
+      <div id="game-pos" class="pos-badge" style="display:none"></div>
+      <div class="english-word" id="game-english">accomplish</div>
+      <div class="word-hint">輸入中文意思</div>
+    </div>
+
+    <div class="answer-input">
+      <input type="text" id="game-input" placeholder="請輸入中文翻譯…" autocomplete="off"
+        onkeydown="if(event.key==='Enter')revealAnswer()">
+    </div>
+
+    <button class="btn btn-primary" onclick="revealAnswer()" id="reveal-btn">🔍 公布答案</button>
+  </div>
+</div>
+
+<!-- ████ REVEAL SCREEN ████ -->
+<div id="screen-reveal" class="screen">
+  <div class="header" style="padding-bottom:20px">
+    <div class="header-title">答案揭曉</div>
+    <div class="header-sub">第 <span id="rv-stage">1</span> 關 · 第 <span id="rv-qnum">1</span>/10 題</div>
+  </div>
+  <div class="content">
+    <div class="result-badge" id="rv-badge">
+      <div class="result-icon" id="rv-icon">✅</div>
+      <div class="result-text" id="rv-result-text">答對了！</div>
+      <div class="result-points" id="rv-points">+10 分</div>
+    </div>
+
+    <div class="word-reveal-big">
+      <div id="rv-pos" style="display:none;margin-bottom:6px"></div>
+      <div class="word-reveal-en" id="rv-english">accomplish</div>
+      <div class="word-reveal-zh" id="rv-chinese">完成、實現</div>
+    </div>
+
+    <div class="example-card" id="rv-example" style="display:none">
+      <div class="example-label">📖 例句</div>
+      <div class="example-text" id="rv-example-text"></div>
+    </div>
+
+    <div class="answer-compare">
+      <div class="answer-row">
+        <span class="answer-tag tag-correct">正確答案</span>
+        <span class="answer-word" id="rv-correct-ans">完成、實現</span>
+      </div>
+      <hr class="divider">
+      <div class="answer-row">
+        <span class="answer-tag tag-yours">你的答案</span>
+        <span class="answer-word" id="rv-your-ans">—</span>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" id="override-btn" onclick="markAsCorrect()" style="display:none;font-size:14px;color:#888;border-color:#ddd">✋ 我算對了（手動判對）</button>
+    <button class="btn btn-primary" onclick="nextWord()" id="next-btn">繼續下一題 →</button>
+  </div>
+</div>
+
+<!-- ████ STAGE COMPLETE ████ -->
+<div id="screen-complete" class="screen">
+  <div class="content" style="justify-content:center;padding-top:60px">
+    <div class="stage-complete-card">
+      <div class="complete-emoji">🎉</div>
+      <div class="complete-title">第 <span id="cp-stage">1</span> 關完成！</div>
+      <div class="complete-sub">本關成績揭曉</div>
+    </div>
+
+    <div class="stage-result-row">
+      <div class="result-stat">
+        <div class="stat-val" id="cp-stage-score">0</div>
+        <div class="stat-label">本關得分</div>
+      </div>
+      <div class="result-stat">
+        <div class="stat-val" id="cp-correct">0</div>
+        <div class="stat-label">答對題數</div>
+      </div>
+      <div class="result-stat">
+        <div class="stat-val" id="cp-total">0</div>
+        <div class="stat-label">累積總分</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <div class="progress-label">🍽️ 大餐進度</div>
+        <div class="progress-pct" id="cp-pct">0%</div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="cp-progress" style="width:0%"></div>
+      </div>
+      <div class="progress-goal" id="cp-goal-text">還差 3000 分</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="nextStage()">繼續下一關 🚀</button>
+    <button class="btn btn-secondary" onclick="showScreen('home')">回首頁</button>
+  </div>
+</div>
+
+<!-- ████ NOTEBOOK SCREEN ████ -->
+<div id="screen-notebook" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="header-title" style="padding-left:44px">錯題本 📒</div>
+    <div class="header-sub" style="padding-left:44px">書籤與答錯的單字</div>
+  </div>
+  <div class="content">
+    <div class="tab-row">
+      <button class="tab active" id="tab-all" onclick="switchTab('all')">全部</button>
+      <button class="tab" id="tab-bookmark" onclick="switchTab('bookmark')">🔖 書籤</button>
+      <button class="tab" id="tab-wrong" onclick="switchTab('wrong')">❌ 答錯</button>
+    </div>
+    <div id="notebook-count" class="text-muted" style="text-align:center">0 個單字</div>
+    <div id="notebook-content"></div>
+  </div>
+</div>
+
+<!-- ████ REWARD POPUP ████ -->
+<div class="overlay hidden" id="reward-overlay">
+  <div class="popup">
+    <div class="popup-emoji">🍽️🎉</div>
+    <div class="popup-title">恭喜獲得大餐！</div>
+    <div class="popup-desc">你已累積 3000 分！<br>去吃一頓大餐犒賞自己吧！<br><br>這是你第 <span id="popup-count">1</span> 次獲得獎勵 🏆</div>
+    <button class="btn btn-gold" onclick="closeReward()">太棒了！繼續加油 💪</button>
+  </div>
+</div>
+
+<!-- ████ SETUP GUIDE POPUP ████ -->
+<div class="overlay hidden" id="setup-overlay">
+  <div class="popup" style="padding:28px 24px">
+    <div class="popup-emoji" style="font-size:48px;margin-bottom:12px">🔧</div>
+    <div class="popup-title" style="font-size:20px;margin-bottom:6px">設定 Google 登入</div>
+    <div class="popup-desc" style="font-size:13px;margin-bottom:16px">需要先設定 Firebase，才能使用 Google 帳號儲存進度</div>
+    <div class="setup-scroll">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-text">前往 <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a>，用 Google 帳號登入，建立新專案</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-text">在專案中點 <b>「Authentication」</b> → 「Sign-in method」→ 啟用 <b>「Google」</b></div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-text">在專案中點 <b>「Firestore Database」</b> → 建立資料庫（選擇 production mode），然後在「規則」頁貼上：
+          <div class="rules-box">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+    }
+  }
+}</div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-text">到 <b>「專案設定」</b>（齒輪圖示）→「一般」→「你的應用程式」→ 新增 Web 應用程式，複製 <code>firebaseConfig</code> 的內容</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-text">用文字編輯器（如記事本）打開這個 HTML 檔，找到 <code>FIREBASE_CONFIG</code> 區塊，把 <code>YOUR_*</code> 的值替換成你剛剛複製的內容，存檔即可</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="closeSetup()" style="font-size:14px;padding:12px">知道了，我去設定</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// FIREBASE CONFIG
+// ════════════════════════════════════════════
+// 請參考 App 內「設定 Google 登入」的說明，
+// 將下方 YOUR_* 的值替換成你的 Firebase 專案設定。
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyC_ceJvq6qZsyYk0uzPl_iWcZnCimab80o",
+  authDomain:        "toeic-mimi0701.firebaseapp.com",
+  projectId:         "toeic-mimi0701",
+  storageBucket:     "toeic-mimi0701.firebasestorage.app",
+  messagingSenderId: "242054648327",
+  appId:             "1:242054648327:web:bcb99584797ef90a5c10a2"
+};
+
+// ════════════════════════════════════════════
+// FIREBASE INIT
+// ════════════════════════════════════════════
+const FIREBASE_CONFIGURED = !FIREBASE_CONFIG.apiKey.startsWith('YOUR_');
+
+let fbAuth = null, fbDb = null, currentUser = null;
+
+if (FIREBASE_CONFIGURED) {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth = firebase.auth();
+    fbDb   = firebase.firestore();
+
+    fbAuth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        await loadFromCloud(user.uid);
+        updateAuthUI(user);
+        updateHomeUI();
+      } else {
+        updateAuthUI(null);
+      }
+    });
+  } catch(e) {
+    console.error('Firebase init error:', e);
+  }
+}
+
+// ════════════════════════════════════════════
+// AUTH FUNCTIONS
+// ════════════════════════════════════════════
+function loginWithGoogle() {
+  if (!FIREBASE_CONFIGURED) {
+    showSetup();
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  fbAuth.signInWithPopup(provider).catch(err => {
+    console.error('Login error:', err);
+    alert('登入失敗：' + err.message);
+  });
+}
+
+function logoutGoogle() {
+  fbAuth.signOut().then(() => {
+    currentUser = null;
+    updateAuthUI(null);
+    // 登出後重置為訪客狀態
+    resetStateToGuest();
+    updateHomeUI();
+  });
+}
+
+function resetStateToGuest() {
+  state = {
+    totalScore: 0, rewardCount: 0, stagesCompleted: 0,
+    totalCorrect: 0, totalAnswered: 0,
+    bookmarked: new Set(), wrongWords: new Set(),
+    stageNum: 1, stageWords: [], stageWordIdx: 0,
+    stageScore: 0, stageCorrects: 0, stageResults: [],
+    stageBookmarked: new Set(), currentUserAnswer: '', currentIsCorrect: false,
+  };
+  // 載入訪客快取（如果有）
+  try {
+    const raw = localStorage.getItem('toeic_mimi_guest');
+    if (raw) {
+      const s = JSON.parse(raw);
+      state = { ...state, ...s,
+        bookmarked: new Set(s.bookmarked || []),
+        wrongWords: new Set(s.wrongWords || []),
+        stageBookmarked: new Set(s.stageBookmarked || []),
+      };
+    }
+  } catch(e) {}
+}
+
+function updateAuthUI(user) {
+  const loggedOut = document.getElementById('auth-logged-out');
+  const loggedIn  = document.getElementById('auth-logged-in');
+  if (!loggedOut || !loggedIn) return;
+
+  if (user) {
+    loggedOut.classList.add('hidden');
+    loggedIn.classList.remove('hidden');
+    const avatarEl = document.getElementById('user-avatar');
+    if (user.photoURL) avatarEl.src = user.photoURL;
+    document.getElementById('user-name').textContent = user.displayName || user.email || '使用者';
+    setSyncStatus('synced');
+  } else {
+    loggedOut.classList.remove('hidden');
+    loggedIn.classList.add('hidden');
+  }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.className = 'sync-status';
+  if (status === 'syncing') {
+    el.classList.add('syncing');
+    el.textContent = '⟳ 同步中';
+  } else if (status === 'synced') {
+    el.textContent = '☁️ 已儲存';
+  } else if (status === 'error') {
+    el.classList.add('error');
+    el.textContent = '⚠️ 同步失敗';
+  }
+}
+
+// ════════════════════════════════════════════
+// CLOUD SAVE / LOAD
+// ════════════════════════════════════════════
+async function saveToCloud(uid) {
+  if (!uid || !fbDb) return;
+  try {
+    setSyncStatus('syncing');
+    await fbDb.collection('users').doc(uid).set({
+      totalScore:      state.totalScore,
+      rewardCount:     state.rewardCount,
+      stagesCompleted: state.stagesCompleted,
+      totalCorrect:    state.totalCorrect,
+      totalAnswered:   state.totalAnswered,
+      bookmarked:      [...state.bookmarked],
+      wrongWords:      [...state.wrongWords],
+      updatedAt:       firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    setSyncStatus('synced');
+  } catch(err) {
+    console.error('Cloud save error:', err);
+    setSyncStatus('error');
+  }
+}
+
+async function loadFromCloud(uid) {
+  if (!uid || !fbDb) return;
+  try {
+    // 先讀取「此帳號」的本機快取（不是別人的資料）
+    const localKey = 'toeic_mimi_' + uid;
+    let localData = null;
+    try {
+      const raw = localStorage.getItem(localKey);
+      if (raw) localData = JSON.parse(raw);
+    } catch(e) {}
+
+    const doc = await fbDb.collection('users').doc(uid).get();
+
+    if (!doc.exists) {
+      // 此帳號雲端尚無資料：若有本機快取則上傳，否則從零開始
+      if (localData) {
+        state = { ...state, ...localData,
+          bookmarked: new Set(localData.bookmarked || []),
+          wrongWords: new Set(localData.wrongWords || []),
+          stageBookmarked: new Set(localData.stageBookmarked || []),
+        };
+        await saveToCloud(uid);
+      }
+      return;
+    }
+
+    const cloudData = doc.data();
+    const cloudScore = cloudData.totalScore || 0;
+    const localScore = localData ? (localData.totalScore || 0) : 0;
+
+    // 以分數高者為準（同分取雲端）
+    const winner = cloudScore >= localScore ? cloudData : localData;
+    state.totalScore      = winner.totalScore      || 0;
+    state.rewardCount     = winner.rewardCount     || 0;
+    state.stagesCompleted = winner.stagesCompleted || 0;
+    state.totalCorrect    = winner.totalCorrect    || 0;
+    state.totalAnswered   = winner.totalAnswered   || 0;
+    state.bookmarked      = new Set(winner.bookmarked  || []);
+    state.wrongWords      = new Set(winner.wrongWords  || []);
+
+    saveLocalOnly(); // 寫入此帳號的本機快取
+    if (localScore > cloudScore) await saveToCloud(uid); // 本機較新則回寫雲端
+  } catch(err) {
+    console.error('Cloud load error:', err);
+  }
+}
+
+// ════════════════════════════════════════════
+// SETUP GUIDE
+// ════════════════════════════════════════════
+function showSetup() {
+  document.getElementById('setup-overlay').classList.remove('hidden');
+}
+function closeSetup() {
+  document.getElementById('setup-overlay').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════
+// VOCABULARY DATA — 300 TOEIC words (進階)
+// ════════════════════════════════════════════
+const _VOCAB_RAW = [
+  {en:"accomplish",zh:"完成、實現",pos:"v.",ex:"She accomplished all her goals ahead of schedule."},
+  {en:"acquisition",zh:"收購、習得",pos:"n.",ex:"The acquisition of the startup cost the firm millions."},
+  {en:"adjacent",zh:"鄰近的、毗連的",pos:"adj.",ex:"Our office is adjacent to the main train station."},
+  {en:"administer",zh:"管理、執行",pos:"v.",ex:"She administers the company's HR policies daily."},
+  {en:"agenda",zh:"議程、日程",pos:"n.",ex:"Please review the agenda before the meeting starts."},
+  {en:"allocate",zh:"分配、撥款",pos:"v.",ex:"We need to allocate more budget to the marketing team."},
+  {en:"analyze",zh:"分析",pos:"v.",ex:"The team will analyze the sales data this afternoon."},
+  {en:"annual",zh:"年度的、每年的",pos:"adj.",ex:"The annual report is due at the end of the month."},
+  {en:"apologize",zh:"道歉",pos:"v.",ex:"I apologize for the delay in responding to your email."},
+  {en:"appoint",zh:"任命、指派",pos:"v.",ex:"The board appointed a new CEO last Friday."},
+  {en:"appreciate",zh:"感謝、欣賞",pos:"v.",ex:"We appreciate your patience during the system upgrade."},
+  {en:"appropriate",zh:"適當的、合適的",pos:"adj.",ex:"Please wear appropriate attire to the job interview."},
+  {en:"approve",zh:"批准、核准",pos:"v.",ex:"The manager approved the revised budget proposal."},
+  {en:"assess",zh:"評估、評定",pos:"v.",ex:"We must assess the risks before proceeding with the plan."},
+  {en:"assets",zh:"資產",pos:"n.",ex:"The company's assets include several commercial properties."},
+  {en:"assist",zh:"協助",pos:"v.",ex:"Our support team will assist you with the installation."},
+  {en:"associate",zh:"同事、聯繫",pos:"n./v.",ex:"He is a senior associate at the consulting firm."},
+  {en:"assume",zh:"假設、承擔",pos:"v.",ex:"Do not assume the meeting is canceled unless informed."},
+  {en:"assure",zh:"確保、保證",pos:"v.",ex:"I assure you the package will arrive by Friday."},
+  {en:"authorize",zh:"授權",pos:"v.",ex:"Only the department head can authorize this expense."},
+  {en:"available",zh:"可用的、有空的",pos:"adj.",ex:"The conference room is available from 2 PM today."},
+  {en:"balance",zh:"平衡、結餘",pos:"n./v.",ex:"Please check the balance in your account before paying."},
+  {en:"benchmark",zh:"基準、標竿",pos:"n.",ex:"This project sets a new benchmark for the industry."},
+  {en:"benefit",zh:"福利、效益",pos:"n.",ex:"The position offers excellent benefits and a competitive salary."},
+  {en:"board",zh:"董事會、上車",pos:"n./v.",ex:"The board of directors meets every quarter to review results."},
+  {en:"budget",zh:"預算",pos:"n.",ex:"We exceeded our budget by 10% in the last quarter."},
+  {en:"candidate",zh:"候選人",pos:"n.",ex:"She is the strongest candidate for the marketing manager role."},
+  {en:"capacity",zh:"容量、能力",pos:"n.",ex:"The conference hall has a seating capacity of 500 people."},
+  {en:"category",zh:"類別",pos:"n.",ex:"Please place all items in the correct product category."},
+  {en:"circumstance",zh:"情況、環境",pos:"n.",ex:"Under these circumstances, we must postpone the product launch."},
+  {en:"clarify",zh:"澄清、說明",pos:"v.",ex:"Could you clarify the payment terms in the contract?"},
+  {en:"collaborate",zh:"合作",pos:"v.",ex:"The two departments collaborated to finish the report early."},
+  {en:"colleague",zh:"同事",pos:"n.",ex:"My colleague will handle your request while I am away."},
+  {en:"commit",zh:"承諾、投入",pos:"v.",ex:"We commit to delivering the final product by next month."},
+  {en:"communicate",zh:"溝通",pos:"v.",ex:"Please communicate any changes to the schedule immediately."},
+  {en:"compensate",zh:"補償",pos:"v.",ex:"The company will compensate employees for all approved overtime."},
+  {en:"competitive",zh:"有競爭力的",pos:"adj.",ex:"We offer a competitive salary and generous annual leave."},
+  {en:"comply",zh:"遵守",pos:"v.",ex:"All staff must comply with the updated workplace safety rules."},
+  {en:"comprehensive",zh:"全面的、綜合的",pos:"adj.",ex:"We provide comprehensive training for all new employees."},
+  {en:"concentrate",zh:"專注、集中",pos:"v.",ex:"Please concentrate on completing the key report first."},
+  {en:"conclude",zh:"結論、完成",pos:"v.",ex:"The annual conference will conclude with an awards ceremony."},
+  {en:"conduct",zh:"進行、行為",pos:"v.",ex:"We will conduct a thorough inspection of the facility next week."},
+  {en:"confirm",zh:"確認",pos:"v.",ex:"Please confirm your attendance by replying to this email."},
+  {en:"consider",zh:"考慮",pos:"v.",ex:"Please consider all available options before making a decision."},
+  {en:"consistent",zh:"一致的",pos:"adj.",ex:"Her work quality has been consistent throughout the project."},
+  {en:"contract",zh:"合約",pos:"n.",ex:"Please review and sign the contract before you start work."},
+  {en:"contribute",zh:"貢獻",pos:"v.",ex:"Each team member is encouraged to contribute new ideas."},
+  {en:"convenient",zh:"方便的",pos:"adj.",ex:"The hotel is in a very convenient downtown location."},
+  {en:"coordinate",zh:"協調",pos:"v.",ex:"She coordinates all logistics for the annual trade fair."},
+  {en:"corporate",zh:"企業的、公司的",pos:"adj.",ex:"Our corporate headquarters is located in central Taipei."},
+  {en:"correspond",zh:"通信、符合",pos:"v.",ex:"The invoice does not correspond to the original order."},
+  {en:"credential",zh:"資歷、證書",pos:"n.",ex:"Please submit your academic credentials for HR review."},
+  {en:"criteria",zh:"標準（複數）",pos:"n.",ex:"The selection criteria are listed in the job posting."},
+  {en:"customize",zh:"客製化",pos:"v.",ex:"We can customize the software to meet your specific needs."},
+  {en:"deadline",zh:"截止日期",pos:"n.",ex:"The submission deadline is next Friday at noon."},
+  {en:"decline",zh:"拒絕、下降",pos:"v.",ex:"Sales declined by 15% during the third quarter."},
+  {en:"delegate",zh:"委派、代表",pos:"v.",ex:"The manager delegated the task to her most reliable assistant."},
+  {en:"demonstrate",zh:"示範、展示",pos:"v.",ex:"Please demonstrate how the new software works to the team."},
+  {en:"department",zh:"部門",pos:"n.",ex:"Please contact the IT department if you need technical support."},
+  {en:"deposit",zh:"存款、訂金",pos:"n.",ex:"A 20% deposit is required to secure your booking."},
+  {en:"description",zh:"描述",pos:"n.",ex:"Read the job description carefully before submitting your application."},
+  {en:"determine",zh:"確定、決定",pos:"v.",ex:"We need to determine the root cause of the delay immediately."},
+  {en:"develop",zh:"開發、發展",pos:"v.",ex:"The R&D team is developing a new line of eco-friendly products."},
+  {en:"discount",zh:"折扣",pos:"n.",ex:"Members receive a 20% discount on all online purchases."},
+  {en:"distribute",zh:"分發、配送",pos:"v.",ex:"Please distribute the handouts to all meeting attendees."},
+  {en:"document",zh:"文件、記錄",pos:"n./v.",ex:"Please document all project changes in the shared folder."},
+  {en:"effective",zh:"有效的",pos:"adj.",ex:"This is the most effective strategy to reduce operating costs."},
+  {en:"efficient",zh:"效率高的",pos:"adj.",ex:"The new workflow is far more efficient than the previous one."},
+  {en:"eligible",zh:"有資格的",pos:"adj.",ex:"You are eligible for a full refund within 30 days of purchase."},
+  {en:"eliminate",zh:"消除",pos:"v.",ex:"We aim to eliminate all unnecessary steps in the process."},
+  {en:"emphasis",zh:"強調",pos:"n.",ex:"The report places strong emphasis on customer satisfaction scores."},
+  {en:"encourage",zh:"鼓勵",pos:"v.",ex:"Management encourages employees to share their ideas openly."},
+  {en:"enhance",zh:"提升、增強",pos:"v.",ex:"This software update enhances the overall user experience significantly."},
+  {en:"establish",zh:"建立、創立",pos:"v.",ex:"The company was established in 1990 and now has global offices."},
+  {en:"evaluate",zh:"評估",pos:"v.",ex:"HR will evaluate all applications and contact shortlisted candidates."},
+  {en:"exception",zh:"例外",pos:"n.",ex:"No exceptions will be made to the company's refund policy."},
+  {en:"executive",zh:"主管、行政的",pos:"n.",ex:"She is a senior executive responsible for the Asia-Pacific region."},
+  {en:"exhibit",zh:"展示、展覽",pos:"v./n.",ex:"Our latest products will be exhibited at the international trade fair."},
+  {en:"expand",zh:"擴展",pos:"v.",ex:"The company plans to expand into three new markets next year."},
+  {en:"expertise",zh:"專業知識",pos:"n.",ex:"We need someone with expertise in data analytics for this role."},
+  {en:"facilitate",zh:"促進、協助",pos:"v.",ex:"The consultant will facilitate the strategy workshop on Monday."},
+  {en:"feasible",zh:"可行的",pos:"adj.",ex:"Is it feasible to complete the entire project by next Friday?"},
+  {en:"financial",zh:"財務的",pos:"adj.",ex:"Please review the financial report for the third quarter."},
+  {en:"flexible",zh:"彈性的",pos:"adj.",ex:"We offer flexible working hours to support work-life balance."},
+  {en:"forecast",zh:"預測",pos:"n./v.",ex:"The sales forecast for this year looks very promising."},
+  {en:"foundation",zh:"基礎、基金會",pos:"n.",ex:"Strong communication is the foundation of effective teamwork."},
+  {en:"function",zh:"功能、運作",pos:"n./v.",ex:"This feature does not function properly on older devices."},
+  {en:"generate",zh:"產生",pos:"v.",ex:"This marketing campaign is expected to generate significant new leads."},
+  {en:"guideline",zh:"指導方針",pos:"n.",ex:"Please follow the guidelines outlined in the employee handbook."},
+  {en:"handle",zh:"處理",pos:"v.",ex:"Can you handle all incoming customer complaints this week?"},
+  {en:"headquarters",zh:"總部",pos:"n.",ex:"Our global headquarters is located in downtown Taipei."},
+  {en:"implement",zh:"實施、執行",pos:"v.",ex:"We will implement the new expense policy starting next month."},
+  {en:"improve",zh:"改善",pos:"v.",ex:"We are constantly working to improve the quality of our service."},
+  {en:"incentive",zh:"激勵、獎勵",pos:"n.",ex:"The company offers cash incentives for employees who exceed their targets."},
+  {en:"indicate",zh:"指出、表示",pos:"v.",ex:"The latest data indicates a steady rise in consumer demand."},
+  {en:"initiative",zh:"主動性、倡議",pos:"n.",ex:"She led the company-wide initiative to reduce paper waste."},
+  {en:"inspect",zh:"檢查",pos:"v.",ex:"The safety officer will inspect the entire facility this afternoon."},
+  {en:"institute",zh:"機構、設立",pos:"n./v.",ex:"New safety rules were instituted following last month's incident."},
+  {en:"integrate",zh:"整合",pos:"v.",ex:"The new CRM system integrates seamlessly with our existing tools."},
+  {en:"interact",zh:"互動",pos:"v.",ex:"Employees are encouraged to interact directly with clients when possible."},
+  {en:"invoice",zh:"發票",pos:"n.",ex:"Please send the invoice to our accounts payable department."},
+  {en:"involve",zh:"涉及、參與",pos:"v.",ex:"This project involves teams from three different departments."},
+  {en:"issue",zh:"議題、發行",pos:"n./v.",ex:"Please report any issue to your supervisor as soon as possible."},
+  {en:"leadership",zh:"領導力",pos:"n.",ex:"Strong leadership is essential to the success of any team."},
+  {en:"maintain",zh:"維持、維護",pos:"v.",ex:"We need to maintain high quality standards across all our products."},
+  {en:"manage",zh:"管理",pos:"v.",ex:"She manages a team of twenty regional sales representatives."},
+  {en:"market",zh:"市場、行銷",pos:"n./v.",ex:"We need to better market our new product to younger consumers."},
+  {en:"measure",zh:"測量、措施",pos:"n./v.",ex:"We take every measure possible to ensure customer data security."},
+  {en:"negotiate",zh:"談判、協商",pos:"v.",ex:"Let's negotiate the contract terms before we sign anything."},
+  {en:"objective",zh:"目標、客觀的",pos:"n.",ex:"Our main objective this quarter is to increase market share by 10%."},
+  {en:"operate",zh:"操作、運營",pos:"v.",ex:"The factory operates around the clock, seven days a week."},
+  {en:"opportunity",zh:"機會",pos:"n.",ex:"This new partnership is a great opportunity for career growth."},
+  {en:"organize",zh:"組織、整理",pos:"v.",ex:"Please organize all the client files in alphabetical order."},
+  {en:"outstanding",zh:"傑出的、未解決的",pos:"adj.",ex:"She received an award for her outstanding performance this year."},
+  {en:"overcome",zh:"克服",pos:"v.",ex:"Together, the team was able to overcome all the project obstacles."},
+  {en:"perform",zh:"執行、表現",pos:"v.",ex:"The sales team performed exceptionally well in the final quarter."},
+  {en:"policy",zh:"政策",pos:"n.",ex:"Our return policy allows full refunds within 30 days of purchase."},
+  {en:"potential",zh:"潛力、潛在的",pos:"n./adj.",ex:"This emerging market has tremendous potential for growth."},
+  {en:"priority",zh:"優先事項",pos:"n.",ex:"Customer satisfaction remains our highest priority at all times."},
+  {en:"procedure",zh:"程序、步驟",pos:"n.",ex:"Please follow the standard procedure for processing all refund requests."},
+  {en:"productive",zh:"有生產力的",pos:"adj.",ex:"The morning meeting was productive and resulted in clear action items."},
+  {en:"professional",zh:"專業的",pos:"adj.",ex:"Please maintain a professional tone in all client communications."},
+  {en:"progress",zh:"進度、進展",pos:"n.",ex:"Please send me an update on the project's progress by Thursday."},
+  {en:"promote",zh:"晉升、推廣",pos:"v.",ex:"She was promoted to senior manager after just two years."},
+  {en:"propose",zh:"提議",pos:"v.",ex:"I propose we schedule a follow-up meeting for next week."},
+  {en:"purchase",zh:"購買",pos:"n./v.",ex:"Please confirm your online purchase within 24 hours to secure the price."},
+  {en:"qualify",zh:"符合資格",pos:"v.",ex:"You may qualify for our premium membership if you spend over $500."},
+  {en:"recommend",zh:"推薦",pos:"v.",ex:"I highly recommend this product based on my personal experience."},
+  {en:"record",zh:"記錄",pos:"n./v.",ex:"Please keep a detailed record of all financial transactions."},
+  {en:"reduce",zh:"減少",pos:"v.",ex:"We are actively working to reduce our overall operational costs."},
+  {en:"refer",zh:"參考、推薦",pos:"v.",ex:"Please refer to the attached user manual for detailed instructions."},
+  {en:"regulation",zh:"規定、法規",pos:"n.",ex:"All exported goods must comply with local customs regulations."},
+  {en:"relevant",zh:"相關的",pos:"adj.",ex:"Please only share information that is directly relevant to this project."},
+  {en:"requirement",zh:"要求、需求",pos:"n.",ex:"Meeting the submission deadline is a non-negotiable requirement."},
+  {en:"responsibility",zh:"責任",pos:"n.",ex:"It is your responsibility to review the contract before signing."},
+  {en:"retain",zh:"保留、留住",pos:"v.",ex:"The company works hard to retain its most talented employees."},
+  {en:"revenue",zh:"收入、營收",pos:"n.",ex:"Our annual revenue increased by 25% compared to last year."},
+  {en:"review",zh:"審查、評論",pos:"n./v.",ex:"Please review the final draft before we send it to the client."},
+  {en:"revise",zh:"修改、修訂",pos:"v.",ex:"Please revise the report based on the feedback from management."},
+  {en:"schedule",zh:"時程、安排",pos:"n./v.",ex:"The client meeting is scheduled for Monday morning at 10 AM."},
+  {en:"significant",zh:"重要的、顯著的",pos:"adj.",ex:"There was a significant drop in sales during the holiday period."},
+  {en:"solution",zh:"解決方案",pos:"n.",ex:"The engineering team found an effective solution to the technical issue."},
+  {en:"strategy",zh:"策略",pos:"n.",ex:"Our growth strategy focuses on expanding our existing customer base."},
+  {en:"submit",zh:"提交",pos:"v.",ex:"Please submit the completed application form by end of business."},
+  {en:"succeed",zh:"成功",pos:"v.",ex:"With the right team and strategy, we will certainly succeed."},
+  {en:"supervise",zh:"監督",pos:"v.",ex:"He supervises a team of ten technicians at the production facility."},
+  {en:"supply",zh:"供應",pos:"n./v.",ex:"The local factory supplies high-quality parts to major automakers."},
+  {en:"support",zh:"支援、支持",pos:"n./v.",ex:"Please contact our customer support team if you have any questions."},
+  {en:"survey",zh:"調查",pos:"n./v.",ex:"We conducted a customer satisfaction survey across all our branches."},
+  {en:"sustainable",zh:"可持續的",pos:"adj.",ex:"We are committed to sustainable and environmentally friendly business practices."},
+  {en:"target",zh:"目標",pos:"n./v.",ex:"The sales team hit their quarterly target three weeks ahead of schedule."},
+  {en:"technical",zh:"技術的",pos:"adj.",ex:"Please contact our technical support team for assistance with installation."},
+  {en:"terminate",zh:"終止",pos:"v.",ex:"The service contract will terminate at the end of this calendar year."},
+  {en:"transaction",zh:"交易",pos:"n.",ex:"All online transactions are protected with the latest encryption technology."},
+  {en:"transfer",zh:"轉移、調職",pos:"v./n.",ex:"Please transfer the funds to our corporate account before Friday."},
+  {en:"update",zh:"更新",pos:"v./n.",ex:"Please update me on any changes to the project timeline immediately."},
+  {en:"utilize",zh:"利用、使用",pos:"v.",ex:"We must fully utilize all available resources to meet the deadline."},
+  {en:"vacant",zh:"空缺的",pos:"adj.",ex:"There is a vacant position available in the marketing department."},
+  {en:"verify",zh:"核實、驗證",pos:"v.",ex:"Please verify your email address to activate your new account."},
+  {en:"warranty",zh:"保固、保證",pos:"n.",ex:"This product comes with a comprehensive two-year warranty."},
+  {en:"abundant",zh:"豐富的、充裕的",pos:"adj.",ex:"The region has abundant natural resources that attract foreign investment."},
+  {en:"accurate",zh:"準確的",pos:"adj.",ex:"Please ensure all the data in your report is accurate and up to date."},
+  {en:"adequate",zh:"足夠的、適當的",pos:"adj.",ex:"The training program was adequate but could be further improved."},
+  {en:"administration",zh:"行政、管理",pos:"n.",ex:"The administration team handles all office logistics and supplies."},
+  {en:"admission",zh:"入場、承認",pos:"n.",ex:"Admission to the annual conference requires advance online registration."},
+  {en:"advance",zh:"預付、進步",pos:"n./v.",ex:"We received full payment in advance for the bulk order."},
+  {en:"adverse",zh:"不利的、負面的",pos:"adj.",ex:"Adverse weather conditions caused significant delays to the shipment."},
+  {en:"affiliate",zh:"附屬機構",pos:"n.",ex:"Our affiliate office in Singapore will contact you directly next week."},
+  {en:"amendment",zh:"修正案、修改",pos:"n.",ex:"An amendment to the original contract was proposed by both parties."},
+  {en:"anticipate",zh:"預期、預料",pos:"v.",ex:"We anticipate strong demand for the new product during the launch period."},
+  {en:"application",zh:"申請、應用程式",pos:"n.",ex:"Please submit your application before the closing date next Friday."},
+  {en:"appointment",zh:"約會、任命",pos:"n.",ex:"I have an important appointment with a new client tomorrow afternoon."},
+  {en:"appreciation",zh:"感謝、增值",pos:"n.",ex:"We would like to express our appreciation for your continued loyalty."},
+  {en:"audit",zh:"審計、稽核",pos:"n./v.",ex:"The external financial audit will begin on Monday morning."},
+  {en:"bilateral",zh:"雙邊的",pos:"adj.",ex:"Both countries signed a landmark bilateral trade agreement last week."},
+  {en:"bonus",zh:"獎金",pos:"n.",ex:"All full-time employees will receive a performance-based year-end bonus."},
+  {en:"capital",zh:"資本、首都",pos:"n.",ex:"The startup raised additional capital through its Series B funding round."},
+  {en:"catastrophe",zh:"災難",pos:"n.",ex:"The factory fire was a catastrophe that halted production for months."},
+  {en:"caution",zh:"謹慎、警告",pos:"n.",ex:"Please exercise extreme caution when handling hazardous chemicals."},
+  {en:"circulation",zh:"流通、發行量",pos:"n.",ex:"The business magazine has a weekly circulation of over 100,000 copies."},
+  {en:"commerce",zh:"商業",pos:"n.",ex:"E-commerce sales have grown dramatically over the past five years."},
+  {en:"commission",zh:"佣金、委員會",pos:"n.",ex:"Sales representatives earn a 5% commission on every deal they close."},
+  {en:"commitment",zh:"承諾、投入",pos:"n.",ex:"We appreciate your long-term commitment to quality and excellence."},
+  {en:"commodity",zh:"商品、大宗物資",pos:"n.",ex:"Oil remains the most traded commodity in global markets."},
+  {en:"compensation",zh:"補償、薪酬",pos:"n.",ex:"The compensation package includes a base salary plus health insurance."},
+  {en:"competition",zh:"競爭",pos:"n.",ex:"The level of competition in the smartphone market is intensifying."},
+  {en:"complaint",zh:"投訴",pos:"n.",ex:"Please file any complaint using our official online submission form."},
+  {en:"compliance",zh:"合規、遵守",pos:"n.",ex:"All staff must complete the annual regulatory compliance training."},
+  {en:"concession",zh:"讓步、優惠",pos:"n.",ex:"The supplier made a price concession to secure the long-term contract."},
+  {en:"confidential",zh:"機密的",pos:"adj.",ex:"This document contains confidential information and must not be shared."},
+  {en:"confirmation",zh:"確認",pos:"n.",ex:"You will receive a booking confirmation email within a few minutes."},
+  {en:"consultant",zh:"顧問",pos:"n.",ex:"We hired an external management consultant to review our processes."},
+  {en:"controversy",zh:"爭議",pos:"n.",ex:"The new pricing policy caused considerable controversy among staff members."},
+  {en:"cooperation",zh:"合作",pos:"n.",ex:"Your full cooperation in this investigation is greatly appreciated."},
+  {en:"corporation",zh:"公司、法人",pos:"n.",ex:"She joined a large multinational corporation right after graduation."},
+  {en:"coverage",zh:"覆蓋範圍、保險範圍",pos:"n.",ex:"The insurance policy provides coverage for all major medical expenses."},
+  {en:"currency",zh:"貨幣",pos:"n.",ex:"All international transactions are processed in US currency."},
+  {en:"deficit",zh:"赤字、虧損",pos:"n.",ex:"The government announced measures to reduce the growing trade deficit."},
+  {en:"delinquent",zh:"拖欠的、違規的",pos:"adj.",ex:"Delinquent accounts will be referred to our collections department."},
+  {en:"demand",zh:"需求、要求",pos:"n./v.",ex:"Consumer demand for electric vehicles is rising sharply this year."},
+  {en:"demographic",zh:"人口統計的",pos:"n./adj.",ex:"Our target demographic is working adults between the ages of 25 and 45."},
+  {en:"depreciation",zh:"折舊、貶值",pos:"n.",ex:"Annual equipment depreciation is recorded in the company's financial statements."},
+  {en:"designated",zh:"指定的",pos:"adj.",ex:"Please park only in the designated visitor parking spaces."},
+  {en:"distinction",zh:"區別、卓越",pos:"n.",ex:"There is a clear distinction between our premium and standard plans."},
+  {en:"dividend",zh:"股息",pos:"n.",ex:"Shareholders will receive their quarterly dividend payment next week."},
+  {en:"duration",zh:"持續時間",pos:"n.",ex:"The service contract has a minimum duration of two years."},
+  {en:"endorsement",zh:"背書、認可",pos:"n.",ex:"The product received a strong celebrity endorsement which boosted sales."},
+  {en:"entrepreneur",zh:"企業家",pos:"n.",ex:"She is a successful entrepreneur who founded three companies before 35."},
+  {en:"environment",zh:"環境",pos:"n.",ex:"We are committed to protecting the natural environment in all our operations."},
+  {en:"equity",zh:"股權、公平",pos:"n.",ex:"The two founders each hold 30% equity in the company."},
+  {en:"exceed",zh:"超過",pos:"v.",ex:"Our sales this quarter exceeded last year's record by 25%."},
+  {en:"exclusive",zh:"獨家的、高級的",pos:"adj.",ex:"Premium members receive exclusive early access to new product launches."},
+  {en:"expenditure",zh:"支出、費用",pos:"n.",ex:"Total project expenditure came in slightly over the approved budget."},
+  {en:"fiscal",zh:"財政的",pos:"adj.",ex:"The fiscal year ends on the 31st of December each year."},
+  {en:"fluctuate",zh:"波動",pos:"v.",ex:"Exchange rates fluctuate constantly in response to global market changes."},
+  {en:"franchise",zh:"特許經營權",pos:"n.",ex:"She purchased a franchise and opened her first location in Taichung."},
+  {en:"global",zh:"全球的",pos:"adj.",ex:"The company now operates on a truly global scale with offices in 40 countries."},
+  {en:"guarantee",zh:"保證、擔保",pos:"n./v.",ex:"We guarantee delivery within three business days or your money back."},
+  {en:"hierarchy",zh:"層級制度",pos:"n.",ex:"All budget requests must follow the company's approval hierarchy."},
+  {en:"hospitality",zh:"款待、好客",pos:"n.",ex:"The hospitality sector is showing strong signs of post-pandemic recovery."},
+  {en:"import",zh:"進口",pos:"n./v.",ex:"The company imports high-quality raw materials from several Asian countries."},
+  {en:"inflation",zh:"通貨膨脹",pos:"n.",ex:"Rising inflation is putting pressure on consumer spending and confidence."},
+  {en:"infrastructure",zh:"基礎設施",pos:"n.",ex:"The city is investing heavily in new digital and transport infrastructure."},
+  {en:"inquiry",zh:"詢問、調查",pos:"n.",ex:"Please send all product inquiries to our dedicated sales team email."},
+  {en:"installment",zh:"分期付款",pos:"n.",ex:"You can pay for the course in monthly installments over 12 months."},
+  {en:"insurance",zh:"保險",pos:"n.",ex:"Our health insurance plan covers both dental and vision care expenses."},
+  {en:"inventory",zh:"存貨、庫存",pos:"n.",ex:"The warehouse team conducts a full inventory check at the end of each month."},
+  {en:"investment",zh:"投資",pos:"n.",ex:"The company made a significant investment in research and development last year."},
+  {en:"itinerary",zh:"行程",pos:"n.",ex:"Please share the final travel itinerary with everyone before the departure."},
+  {en:"jurisdiction",zh:"管轄權",pos:"n.",ex:"This legal matter falls under the jurisdiction of the local district court."},
+  {en:"layoff",zh:"裁員",pos:"n.",ex:"The firm announced a major round of layoffs due to budget restructuring."},
+  {en:"lease",zh:"租約",pos:"n./v.",ex:"The new office space is available for lease starting next January."},
+  {en:"liability",zh:"責任、負債",pos:"n.",ex:"The company admitted full liability and agreed to pay compensation."},
+  {en:"logistics",zh:"物流",pos:"n.",ex:"Our dedicated logistics team ensures all orders are delivered on time."},
+  {en:"lucrative",zh:"有利可圖的",pos:"adj.",ex:"Entering the Asian market proved to be an extremely lucrative decision."},
+  {en:"magnitude",zh:"規模、大小",pos:"n.",ex:"The magnitude of the damage from the data breach was enormous."},
+  {en:"mandatory",zh:"強制的",pos:"adj.",ex:"Attendance at the annual fire safety training session is mandatory for all staff."},
+  {en:"merger",zh:"合併",pos:"n.",ex:"The merger will create the largest telecommunications company in the country."},
+  {en:"momentum",zh:"動力、勢頭",pos:"n.",ex:"The project is gaining momentum after a slow start in the first month."},
+  {en:"monitor",zh:"監控、螢幕",pos:"v./n.",ex:"Please monitor the system closely for any unusual errors or activity."},
+  {en:"morale",zh:"士氣",pos:"n.",ex:"Team morale improved significantly after the announcement of the bonus scheme."},
+  {en:"mortgage",zh:"抵押貸款",pos:"n.",ex:"She is currently paying off a 20-year mortgage on her apartment."},
+  {en:"mutual",zh:"相互的",pos:"adj.",ex:"We finally reached a mutual agreement on the revised contract terms."},
+  {en:"notify",zh:"通知",pos:"v.",ex:"Please notify us immediately if your delivery address needs to be changed."},
+  {en:"obligation",zh:"義務",pos:"n.",ex:"You have a legal obligation to fulfill all the terms of the agreement."},
+  {en:"occupancy",zh:"入住率、占用",pos:"n.",ex:"Hotel occupancy rates are consistently high throughout the peak summer season."},
+  {en:"outcome",zh:"結果、成果",pos:"n.",ex:"The outcome of yesterday's negotiation was very positive for both parties."},
+  {en:"overhead",zh:"管理費用",pos:"n.",ex:"Reducing overhead is the most effective way to improve our profit margins."},
+  {en:"partnership",zh:"合夥關係",pos:"n.",ex:"We formed a strategic partnership with a leading local supplier."},
+  {en:"pension",zh:"退休金",pos:"n.",ex:"The company contributes 5% of each employee's salary to their pension fund."},
+  {en:"perception",zh:"認知、看法",pos:"n.",ex:"Customer perception of our brand has improved greatly this year."},
+  {en:"portfolio",zh:"投資組合、作品集",pos:"n.",ex:"She manages a highly diversified investment portfolio for the firm's clients."},
+  {en:"preliminary",zh:"初步的、準備的",pos:"adj.",ex:"A preliminary assessment of the project risks will be ready by Monday."},
+  {en:"prestigious",zh:"有聲望的",pos:"adj.",ex:"She graduated from a prestigious university with a degree in finance."},
+  {en:"productivity",zh:"生產力",pos:"n.",ex:"Remote working options have significantly increased team productivity."},
+  {en:"proficiency",zh:"熟練度",pos:"n.",ex:"A high level of English language proficiency is required for this position."},
+  {en:"prohibition",zh:"禁止",pos:"n.",ex:"There is a strict prohibition on smoking anywhere inside the building."},
+  {en:"prospective",zh:"未來的、有望的",pos:"adj.",ex:"We held a breakfast event for several prospective clients and investors."},
+  {en:"protocol",zh:"協定、規範",pos:"n.",ex:"Please follow the standard emergency protocol in the event of a fire."},
+  {en:"provision",zh:"條款、準備",pos:"n.",ex:"The contract includes a clear provision for early termination by either party."},
+  {en:"pursue",zh:"追求",pos:"v.",ex:"We intend to pursue new business opportunities in Southeast Asia."},
+  {en:"quota",zh:"配額",pos:"n.",ex:"Each member of the sales team has a monthly revenue quota to achieve."},
+  {en:"recipient",zh:"收件人、接受者",pos:"n.",ex:"The recipient of this year's award was announced at the gala dinner."},
+  {en:"reconcile",zh:"調和、核對",pos:"v.",ex:"Please reconcile all accounts before the end-of-month financial close."},
+  {en:"recruit",zh:"招募",pos:"v.",ex:"We are actively recruiting for several open positions across all departments."},
+  {en:"reimbursement",zh:"報銷",pos:"n.",ex:"Submit all expense receipts to HR for reimbursement by the 5th of next month."},
+  {en:"reliable",zh:"可靠的",pos:"adj.",ex:"We need a reliable supplier who can deliver consistently on short notice."},
+  {en:"relocate",zh:"遷移、搬遷",pos:"v.",ex:"The company plans to relocate its headquarters to a larger building next year."},
+  {en:"remittance",zh:"匯款",pos:"n.",ex:"Please confirm receipt of the international remittance within two business days."},
+  {en:"renowned",zh:"著名的",pos:"adj.",ex:"She is a renowned expert in international trade law and arbitration."},
+  {en:"reputation",zh:"聲譽",pos:"n.",ex:"Our company has built a strong reputation for reliability and quality service."},
+  {en:"resignation",zh:"辭職",pos:"n.",ex:"He submitted his formal resignation letter to HR on Monday morning."},
+  {en:"resolution",zh:"決議、解決",pos:"n.",ex:"We reached a swift resolution to the billing dispute with the client."},
+  {en:"restructure",zh:"重組",pos:"v.",ex:"The company is restructuring its entire sales division to improve efficiency."},
+  {en:"revision",zh:"修訂",pos:"n.",ex:"Please incorporate all requested revisions before resubmitting the final report."},
+  {en:"rival",zh:"競爭對手",pos:"n.",ex:"Our main rival launched a competing product just two weeks before us."},
+  {en:"shareholder",zh:"股東",pos:"n.",ex:"All shareholders are formally invited to attend the annual general meeting."},
+  {en:"sophisticated",zh:"複雜的、精明的",pos:"adj.",ex:"The new platform features a highly sophisticated data analytics interface."},
+  {en:"specification",zh:"規格、說明書",pos:"n.",ex:"Please review all technical specifications carefully before placing your order."},
+  {en:"statistics",zh:"統計數據",pos:"n.",ex:"The latest statistics show a clear and consistent upward trend in sales."},
+  {en:"stimulate",zh:"刺激、促進",pos:"v.",ex:"Lower interest rates are designed to stimulate overall economic growth."},
+  {en:"streamline",zh:"精簡化",pos:"v.",ex:"We need to streamline our approval process to reduce unnecessary delays."},
+  {en:"subsidiary",zh:"子公司",pos:"n.",ex:"The company operates a wholly owned subsidiary in Hong Kong."},
+  {en:"supplement",zh:"補充、增刊",pos:"n./v.",ex:"This additional report supplements the main data presented last week."},
+  {en:"tentative",zh:"暫定的、試探性的",pos:"adj.",ex:"The meeting is tentatively scheduled for Tuesday afternoon at 2 PM."},
+  {en:"transition",zh:"過渡、轉型",pos:"n.",ex:"The company is currently in a major period of digital transformation."},
+  {en:"accumulate",zh:"累積",pos:"v.",ex:"You can accumulate reward points with every qualifying purchase."},
+  {en:"acquire",zh:"獲得、收購",pos:"v.",ex:"The firm acquired a smaller competitor to expand its market share."},
+  {en:"adapt",zh:"適應",pos:"v.",ex:"We must quickly adapt our strategy to keep up with changing market conditions."},
+  {en:"ambiguous",zh:"模糊的、不明確的",pos:"adj.",ex:"The wording of the clause is ambiguous and requires further clarification."},
+  {en:"anticipation",zh:"預期、期待",pos:"n.",ex:"There is great anticipation among staff ahead of the new product launch."},
+  {en:"approval",zh:"核准、贊同",pos:"n.",ex:"The project requires board approval before any work can officially begin."},
+  {en:"arbitrary",zh:"任意的、專橫的",pos:"adj.",ex:"The decision seemed arbitrary and lacked any clear justification."},
+  {en:"archive",zh:"存檔、檔案",pos:"n./v.",ex:"Please archive all documents from the completed project in the shared drive."},
+  {en:"aspire",zh:"渴望、志向",pos:"v.",ex:"She aspires to become the company's Chief Financial Officer within five years."},
+  {en:"brochure",zh:"小冊子",pos:"n.",ex:"Please take a product brochure from the display stand at the entrance."},
+  {en:"bureaucracy",zh:"官僚體制",pos:"n.",ex:"The approval was held up by excessive bureaucracy within the organization."},
+  {en:"commute",zh:"通勤",pos:"n./v.",ex:"His daily commute from the suburbs to downtown takes about 45 minutes."},
+  {en:"compile",zh:"彙編、整理",pos:"v.",ex:"Please compile all customer feedback into a single summary report."},
+  {en:"concise",zh:"簡潔的",pos:"adj.",ex:"Please keep your executive summary concise—no more than one page."},
+  {en:"confidentiality",zh:"保密性",pos:"n.",ex:"Strict confidentiality is required when handling all sensitive client data."},
+  {en:"congestion",zh:"壅塞",pos:"n.",ex:"Severe traffic congestion caused many commuters to arrive late this morning."},
+  {en:"consecutively",zh:"連續地",pos:"adv.",ex:"She won the employee of the month award consecutively for six months."},
+  {en:"consolidate",zh:"整合、加強",pos:"v.",ex:"We plan to consolidate our three regional offices into one central location."},
+  {en:"contingency",zh:"應急計畫、偶發事件",pos:"n.",ex:"We always have a contingency plan in place in case of unexpected delays."},
+  {en:"contractor",zh:"承包商",pos:"n.",ex:"We hired an independent contractor to manage the office renovation project."},
+  {en:"convene",zh:"召開、集合",pos:"v.",ex:"The board will convene for an emergency meeting first thing on Monday."},
+  {en:"critical",zh:"關鍵的、批判的",pos:"adj.",ex:"Customer feedback is critical to our continuous product improvement process."},
+  {en:"cutback",zh:"削減",pos:"n.",ex:"Budget cutbacks have affected staffing levels across several departments."},
+  {en:"deficiency",zh:"缺乏、不足",pos:"n.",ex:"A deficiency in the supply chain was identified as the main cause of delays."},
+  {en:"density",zh:"密度",pos:"n.",ex:"The high population density in the city center drives strong retail demand."},
+  {en:"diligent",zh:"勤奮的",pos:"adj.",ex:"She is a highly diligent worker who consistently delivers results on time."},
+  {en:"dispatch",zh:"派遣、發送",pos:"v./n.",ex:"Your order will be dispatched from our warehouse within 24 hours."},
+  {en:"domain",zh:"領域、域名",pos:"n.",ex:"This complex negotiation falls firmly within your domain of expertise."},
+  {en:"dominant",zh:"主導的",pos:"adj.",ex:"Our company has been the dominant player in this sector for over a decade."},
+  {en:"draft",zh:"草稿、起草",pos:"n./v.",ex:"Please draft an initial proposal and share it with the team by Monday."},
+  {en:"enclose",zh:"隨附、附上",pos:"v.",ex:"I enclose a signed copy of the contract for your records and review."},
+  {en:"encompass",zh:"涵蓋、包含",pos:"v.",ex:"The new strategy encompasses all aspects of the customer experience journey."},
+  {en:"enterprise",zh:"企業、事業",pos:"n.",ex:"She founded a highly successful enterprise at just 28 years old."},
+  {en:"equivalent",zh:"等值的、相等物",pos:"adj.",ex:"This local certification is equivalent to an internationally recognized qualification."},
+  {en:"expedite",zh:"加速、加快",pos:"v.",ex:"Could you expedite the processing of this urgent order, please?"},
+  {en:"explicit",zh:"明確的",pos:"adj.",ex:"Please provide explicit and detailed instructions for each task assigned."},
+  {en:"expiration",zh:"到期、截止",pos:"n.",ex:"Please check the expiration date on your membership card before using it."},
+  {en:"exposure",zh:"曝光、接觸",pos:"n.",ex:"Social media advertising gives our brand extensive exposure to new audiences."},
+  {en:"factor",zh:"因素、要素",pos:"n.",ex:"Price is the most important factor in the customer's final purchase decision."},
+  {en:"fluctuation",zh:"波動",pos:"n.",ex:"Sudden currency fluctuations can have a major impact on import costs."},
+  {en:"forthcoming",zh:"即將到來的",pos:"adj.",ex:"Full details of the event will be provided in the forthcoming newsletter."},
+  {en:"freelance",zh:"自由業",pos:"adj./v.",ex:"She works as a freelance graphic designer for several major advertising agencies."},
+  {en:"fulfill",zh:"履行、實現",pos:"v.",ex:"We guarantee that we will fulfill every order on time and in full."},
+  {en:"generic",zh:"通用的",pos:"adj.",ex:"Generic office supplies can be sourced at a much lower cost."},
+  {en:"grant",zh:"授予、補助",pos:"n./v.",ex:"The government granted significant funding to support innovative local startups."},
+  {en:"incentivize",zh:"給予激勵",pos:"v.",ex:"We incentivize top performers with a generous monthly bonus scheme."},
+  {en:"incumbent",zh:"現任的",pos:"adj./n.",ex:"The incumbent CEO announced his retirement at the shareholder meeting."},
+  {en:"inevitable",zh:"不可避免的",pos:"adj.",ex:"Some degree of change is inevitable as the company continues to grow."},
+  {en:"innovation",zh:"創新",pos:"n.",ex:"A culture of continuous innovation is at the very heart of our company."},
+  {en:"interim",zh:"臨時的、過渡期",pos:"adj.",ex:"An interim manager was appointed to lead the team during the transition."},
+  {en:"keynote",zh:"主旨演講",pos:"n.",ex:"The CEO will deliver the opening keynote speech at tomorrow's conference."},
+  {en:"leverage",zh:"槓桿、利用",pos:"n./v.",ex:"We can leverage our strong brand reputation to enter new overseas markets."},
+  {en:"liaison",zh:"聯絡人、協調",pos:"n.",ex:"She acts as the key liaison between the client and our project team."},
+  {en:"mediocre",zh:"平庸的",pos:"adj.",ex:"The quarterly results were mediocre and fell well short of expectations."},
+  {en:"methodology",zh:"方法論",pos:"n.",ex:"Please clearly describe the research methodology used in the final report."},
+  {en:"milestone",zh:"里程碑",pos:"n.",ex:"Completing the beta launch on time was a significant project milestone."},
+  {en:"minimize",zh:"最小化",pos:"v.",ex:"Our primary goal this quarter is to minimize waste and reduce overall costs."},
+  {en:"mitigate",zh:"緩解、減輕",pos:"v.",ex:"We took several precautionary steps to mitigate the risk of project delays."},
+  {en:"multitask",zh:"多工處理",pos:"v.",ex:"This fast-paced role requires the ability to multitask under constant pressure."},
+  {en:"negligible",zh:"可忽略的",pos:"adj.",ex:"The difference in price between the two options is negligible."},
+  {en:"network",zh:"人脈、網路",pos:"n./v.",ex:"She attended the industry conference specifically to network with potential clients."},
+  {en:"optimize",zh:"最佳化",pos:"v.",ex:"We are continuously working to optimize our internal processes for greater efficiency."},
+  {en:"outreach",zh:"外展活動",pos:"n.",ex:"The community outreach program has successfully connected us with new local clients."},
+  {en:"outsource",zh:"外包",pos:"v.",ex:"We decided to outsource our IT support functions to a specialist third-party provider."},
+  {en:"overdue",zh:"逾期的",pos:"adj.",ex:"The outstanding payment is now two weeks overdue and must be settled immediately."},
+  {en:"participant",zh:"參與者",pos:"n.",ex:"Every participant will receive a certificate of completion after the workshop."},
+  {en:"pending",zh:"待定的",pos:"adj.",ex:"The final contract is still pending approval from the legal department."},
+  {en:"personnel",zh:"人員、人事",pos:"n.",ex:"Please direct all HR-related enquiries to the personnel department directly."},
+  {en:"petition",zh:"請願、申請",pos:"n./v.",ex:"Staff members submitted a formal petition requesting more flexible working hours."},
+  {en:"pivotal",zh:"關鍵的",pos:"adj.",ex:"This strategic partnership is absolutely pivotal to our future growth plans."},
+  {en:"plausible",zh:"看似合理的",pos:"adj.",ex:"The explanation provided seems plausible but still requires further investigation."},
+  {en:"precaution",zh:"預防措施",pos:"n.",ex:"Please take all necessary precautions when travelling to high-risk areas."},
+  {en:"precedent",zh:"先例",pos:"n.",ex:"This landmark deal sets an important precedent for future industry negotiations."},
+  {en:"proactive",zh:"積極主動的",pos:"adj.",ex:"We encourage all staff to be proactive in identifying and resolving issues."},
+  {en:"profitability",zh:"獲利能力",pos:"n.",ex:"Improving long-term profitability is our primary strategic objective this year."},
+  {en:"projection",zh:"預測、預計",pos:"n.",ex:"Our revenue projection for next year shows an optimistic 15% growth rate."},
+  {en:"quarterly",zh:"每季的",pos:"adj.",ex:"We hold a detailed quarterly review to assess overall business performance."},
+  {en:"readjust",zh:"重新調整",pos:"v.",ex:"We may need to readjust the project timeline based on the latest feedback."},
+  {en:"rebound",zh:"反彈",pos:"v./n.",ex:"Sales rebounded strongly in the second quarter after a difficult start."},
+  {en:"receptionist",zh:"接待員",pos:"n.",ex:"Please check in with our receptionist upon arrival at the main entrance."},
+  {en:"renegotiate",zh:"重新談判",pos:"v.",ex:"We need to renegotiate the contract terms due to rising material costs."},
+  {en:"replenish",zh:"補充",pos:"v.",ex:"We must replenish our stock levels before the busy holiday season begins."},
+  {en:"residential",zh:"住宅的",pos:"adj.",ex:"The new mixed-use development includes both residential and commercial units."},
+  {en:"resilient",zh:"有韌性的",pos:"adj.",ex:"The local economy has proved remarkably resilient despite the global downturn."},
+  {en:"retrofit",zh:"翻新、改裝",pos:"v.",ex:"All older factory machines were retrofitted with modern energy-saving systems."},
+  {en:"scrutinize",zh:"仔細審查",pos:"v.",ex:"Independent auditors will scrutinize all financial records from the past year."},
+  {en:"sector",zh:"部門、產業",pos:"n.",ex:"The technology sector is experiencing record-breaking growth this fiscal year."},
+  {en:"segmentation",zh:"市場區隔",pos:"n.",ex:"Effective market segmentation allows us to target each customer group precisely."},
+  {en:"sequential",zh:"順序的",pos:"adj.",ex:"Please complete all the onboarding tasks in the correct sequential order."},
+  {en:"shortfall",zh:"缺口、短缺",pos:"n.",ex:"There was a significant shortfall in expected revenue during the final quarter."},
+  {en:"simultaneous",zh:"同時的",pos:"adj.",ex:"We launched simultaneous marketing campaigns in five different regional markets."},
+  {en:"stakeholder",zh:"利害關係人",pos:"n.",ex:"All key stakeholders were briefed on the changes before the announcement."},
+  {en:"stipulate",zh:"規定、明定",pos:"v.",ex:"The contract clearly stipulates that payment must be made within 30 days."},
+  {en:"substantial",zh:"大量的、實質的",pos:"adj.",ex:"The new project will require a substantial investment of both time and resources."},
+  {en:"succession",zh:"繼任、連續",pos:"n.",ex:"A clear succession plan ensures smooth leadership continuity for the organization."},
+  {en:"surpass",zh:"超越",pos:"v.",ex:"This year's revenue has already surpassed last year's full-year total."},
+  {en:"systematically",zh:"有系統地",pos:"adv.",ex:"All reported issues must be addressed systematically using our tracking software."},
+  {en:"thorough",zh:"徹底的",pos:"adj.",ex:"Please conduct a thorough review of all proposals before making a final decision."},
+  {en:"transparency",zh:"透明度",pos:"n.",ex:"Full transparency in all communications is essential to building client trust."},
+  {en:"turnover",zh:"營業額、離職率",pos:"n.",ex:"Annual revenue turnover reached a new record of $10 million last fiscal year."},
+  {en:"unanimous",zh:"一致同意的",pos:"adj.",ex:"The board's decision to proceed with the merger was completely unanimous."},
+  {en:"undermine",zh:"削弱",pos:"v.",ex:"Poor internal communication can seriously undermine overall team performance."},
+  {en:"universal",zh:"普遍的",pos:"adj.",ex:"Providing excellent customer service should be a universal standard across all branches."},
+  {en:"urgency",zh:"緊迫性",pos:"n.",ex:"Please handle this escalated complaint with the highest level of urgency."},
+  {en:"venture",zh:"冒險、創業",pos:"n./v.",ex:"The new joint venture attracted considerable investment from overseas partners."},
+  {en:"viable",zh:"可行的",pos:"adj.",ex:"We need to determine whether this business model is financially viable long-term."},
+  {en:"volatile",zh:"不穩定的",pos:"adj.",ex:"The stock market has been highly volatile over the past several weeks."},
+  {en:"workforce",zh:"勞動力",pos:"n.",ex:"The company is investing in training to upskill its entire global workforce."},
+  {en:"yield",zh:"產出、收益",pos:"n./v.",ex:"The investment yielded an impressive 12% annual return for shareholders."},
+];
+
+// ── 中等偏易 300 字（補充包）──
+const VOCAB_EASY = [
+  {en:"accept",zh:"接受"},
+  {en:"access",zh:"進入、存取"},
+  {en:"account",zh:"帳戶"},
+  {en:"action",zh:"行動"},
+  {en:"active",zh:"活躍的"},
+  {en:"actual",zh:"實際的"},
+  {en:"add",zh:"增加"},
+  {en:"address",zh:"地址"},
+  {en:"adjust",zh:"調整"},
+  {en:"agree",zh:"同意"},
+  {en:"allow",zh:"允許"},
+  {en:"announce",zh:"宣布"},
+  {en:"area",zh:"區域"},
+  {en:"arrange",zh:"安排"},
+  {en:"arrive",zh:"到達"},
+  {en:"article",zh:"文章"},
+  {en:"ask",zh:"詢問"},
+  {en:"attach",zh:"附加"},
+  {en:"attend",zh:"出席"},
+  {en:"avoid",zh:"避免"},
+  {en:"badge",zh:"識別證"},
+  {en:"basic",zh:"基本的"},
+  {en:"bill",zh:"帳單"},
+  {en:"borrow",zh:"借用"},
+  {en:"branch",zh:"分部、分公司"},
+  {en:"brand",zh:"品牌"},
+  {en:"break",zh:"休息"},
+  {en:"brief",zh:"簡短的"},
+  {en:"bring",zh:"帶來"},
+  {en:"busy",zh:"忙碌的"},
+  {en:"button",zh:"按鈕"},
+  {en:"call",zh:"打電話"},
+  {en:"campus",zh:"校園"},
+  {en:"cancel",zh:"取消"},
+  {en:"careful",zh:"小心的"},
+  {en:"carry",zh:"攜帶"},
+  {en:"cause",zh:"原因、導致"},
+  {en:"center",zh:"中心"},
+  {en:"certain",zh:"確定的"},
+  {en:"chain",zh:"連鎖"},
+  {en:"change",zh:"改變"},
+  {en:"charge",zh:"收費"},
+  {en:"check",zh:"檢查"},
+  {en:"choice",zh:"選擇"},
+  {en:"choose",zh:"選擇"},
+  {en:"city",zh:"城市"},
+  {en:"claim",zh:"聲稱、申請"},
+  {en:"class",zh:"課堂、等級"},
+  {en:"clean",zh:"清潔"},
+  {en:"clear",zh:"清楚的"},
+  {en:"click",zh:"點擊"},
+  {en:"close",zh:"關閉"},
+  {en:"code",zh:"代碼"},
+  {en:"collect",zh:"收集"},
+  {en:"comment",zh:"評論"},
+  {en:"common",zh:"常見的"},
+  {en:"complete",zh:"完成"},
+  {en:"computer",zh:"電腦"},
+  {en:"condition",zh:"條件、狀況"},
+  {en:"conference",zh:"會議"},
+  {en:"connect",zh:"連接"},
+  {en:"contact",zh:"聯繫"},
+  {en:"content",zh:"內容"},
+  {en:"continue",zh:"繼續"},
+  {en:"copy",zh:"複製"},
+  {en:"correct",zh:"正確的、更正"},
+  {en:"cost",zh:"成本、費用"},
+  {en:"count",zh:"計算"},
+  {en:"counter",zh:"櫃台"},
+  {en:"coupon",zh:"優惠券"},
+  {en:"course",zh:"課程"},
+  {en:"cover",zh:"涵蓋、封面"},
+  {en:"create",zh:"創造"},
+  {en:"current",zh:"目前的"},
+  {en:"daily",zh:"每日的"},
+  {en:"damage",zh:"損壞"},
+  {en:"data",zh:"資料"},
+  {en:"date",zh:"日期"},
+  {en:"deal",zh:"交易"},
+  {en:"decide",zh:"決定"},
+  {en:"default",zh:"預設"},
+  {en:"delay",zh:"延遲"},
+  {en:"delete",zh:"刪除"},
+  {en:"deliver",zh:"遞送"},
+  {en:"depend",zh:"依賴、取決於"},
+  {en:"describe",zh:"描述"},
+  {en:"design",zh:"設計"},
+  {en:"destination",zh:"目的地"},
+  {en:"detail",zh:"細節"},
+  {en:"device",zh:"裝置"},
+  {en:"different",zh:"不同的"},
+  {en:"digital",zh:"數位的"},
+  {en:"direct",zh:"直接的"},
+  {en:"direction",zh:"方向"},
+  {en:"discuss",zh:"討論"},
+  {en:"display",zh:"展示、顯示"},
+  {en:"distance",zh:"距離"},
+  {en:"divide",zh:"分開"},
+  {en:"double",zh:"雙倍"},
+  {en:"download",zh:"下載"},
+  {en:"drop",zh:"下降、投遞"},
+  {en:"due",zh:"到期的"},
+  {en:"early",zh:"早的"},
+  {en:"earn",zh:"賺取"},
+  {en:"easy",zh:"容易的"},
+  {en:"edit",zh:"編輯"},
+  {en:"effect",zh:"效果"},
+  {en:"effort",zh:"努力"},
+  {en:"email",zh:"電子郵件"},
+  {en:"employee",zh:"員工"},
+  {en:"empty",zh:"空的"},
+  {en:"enter",zh:"進入、輸入"},
+  {en:"error",zh:"錯誤"},
+  {en:"exact",zh:"精確的"},
+  {en:"exchange",zh:"交換"},
+  {en:"exit",zh:"出口"},
+  {en:"explain",zh:"解釋"},
+  {en:"extra",zh:"額外的"},
+  {en:"fail",zh:"失敗"},
+  {en:"fare",zh:"票價"},
+  {en:"feature",zh:"特色、功能"},
+  {en:"fee",zh:"費用"},
+  {en:"file",zh:"檔案、歸檔"},
+  {en:"fill",zh:"填寫"},
+  {en:"final",zh:"最終的"},
+  {en:"find",zh:"找到"},
+  {en:"finish",zh:"完成"},
+  {en:"fix",zh:"修理"},
+  {en:"flight",zh:"班機"},
+  {en:"floor",zh:"樓層"},
+  {en:"focus",zh:"專注"},
+  {en:"follow",zh:"遵循、跟隨"},
+  {en:"forward",zh:"轉發、向前"},
+  {en:"free",zh:"免費的"},
+  {en:"full",zh:"滿的"},
+  {en:"gain",zh:"獲得、增益"},
+  {en:"gift",zh:"禮物"},
+  {en:"give",zh:"給予"},
+  {en:"grow",zh:"成長"},
+  {en:"guest",zh:"客人"},
+  {en:"guide",zh:"指南、引導"},
+  {en:"help",zh:"幫助"},
+  {en:"hire",zh:"雇用"},
+  {en:"hold",zh:"舉辦、持有"},
+  {en:"hotel",zh:"飯店"},
+  {en:"hour",zh:"小時"},
+  {en:"idea",zh:"想法"},
+  {en:"important",zh:"重要的"},
+  {en:"include",zh:"包括"},
+  {en:"increase",zh:"增加"},
+  {en:"inform",zh:"通知"},
+  {en:"install",zh:"安裝"},
+  {en:"invite",zh:"邀請"},
+  {en:"item",zh:"項目"},
+  {en:"join",zh:"加入"},
+  {en:"keep",zh:"保持"},
+  {en:"key",zh:"關鍵、鑰匙"},
+  {en:"label",zh:"標籤"},
+  {en:"large",zh:"大的"},
+  {en:"late",zh:"遲到的"},
+  {en:"lead",zh:"領導"},
+  {en:"learn",zh:"學習"},
+  {en:"leave",zh:"離開、休假"},
+  {en:"letter",zh:"信件"},
+  {en:"level",zh:"等級、水準"},
+  {en:"limited",zh:"有限的"},
+  {en:"list",zh:"清單"},
+  {en:"local",zh:"本地的"},
+  {en:"locate",zh:"找到位置、位於"},
+  {en:"log",zh:"記錄、日誌"},
+  {en:"long",zh:"長的"},
+  {en:"look",zh:"查看"},
+  {en:"lose",zh:"失去"},
+  {en:"lunch",zh:"午餐"},
+  {en:"mail",zh:"郵件"},
+  {en:"main",zh:"主要的"},
+  {en:"make",zh:"製作"},
+  {en:"mark",zh:"標記"},
+  {en:"meet",zh:"會面"},
+  {en:"meeting",zh:"會議"},
+  {en:"menu",zh:"菜單"},
+  {en:"message",zh:"訊息"},
+  {en:"method",zh:"方法"},
+  {en:"miss",zh:"錯過"},
+  {en:"modern",zh:"現代的"},
+  {en:"monthly",zh:"每月的"},
+  {en:"move",zh:"移動"},
+  {en:"name",zh:"名稱"},
+  {en:"nearby",zh:"附近的"},
+  {en:"need",zh:"需要"},
+  {en:"notice",zh:"注意、告示"},
+  {en:"number",zh:"數字"},
+  {en:"offer",zh:"提供、報價"},
+  {en:"office",zh:"辦公室"},
+  {en:"official",zh:"官方的"},
+  {en:"option",zh:"選項"},
+  {en:"original",zh:"原本的"},
+  {en:"page",zh:"頁面"},
+  {en:"park",zh:"停車"},
+  {en:"pay",zh:"支付"},
+  {en:"personal",zh:"個人的"},
+  {en:"phone",zh:"電話"},
+  {en:"photo",zh:"照片"},
+  {en:"physical",zh:"實體的"},
+  {en:"place",zh:"地點、放置"},
+  {en:"plan",zh:"計劃"},
+  {en:"point",zh:"重點、積分"},
+  {en:"possible",zh:"可能的"},
+  {en:"post",zh:"張貼、郵寄"},
+  {en:"prepare",zh:"準備"},
+  {en:"price",zh:"價格"},
+  {en:"print",zh:"列印"},
+  {en:"problem",zh:"問題"},
+  {en:"process",zh:"過程、處理"},
+  {en:"product",zh:"產品"},
+  {en:"proper",zh:"適當的"},
+  {en:"public",zh:"公開的"},
+  {en:"put",zh:"放置"},
+  {en:"question",zh:"問題"},
+  {en:"ready",zh:"準備好的"},
+  {en:"receive",zh:"收到"},
+  {en:"register",zh:"登記、註冊"},
+  {en:"regular",zh:"定期的"},
+  {en:"remind",zh:"提醒"},
+  {en:"rent",zh:"租用、租金"},
+  {en:"repair",zh:"修理"},
+  {en:"replace",zh:"替換"},
+  {en:"report",zh:"報告"},
+  {en:"request",zh:"請求"},
+  {en:"require",zh:"要求"},
+  {en:"reserve",zh:"預訂"},
+  {en:"respond",zh:"回應"},
+  {en:"result",zh:"結果"},
+  {en:"return",zh:"返回、退還"},
+  {en:"right",zh:"正確的"},
+  {en:"room",zh:"房間"},
+  {en:"route",zh:"路線"},
+  {en:"rule",zh:"規則"},
+  {en:"run",zh:"運行"},
+  {en:"salary",zh:"薪水"},
+  {en:"save",zh:"儲存、節省"},
+  {en:"scan",zh:"掃描"},
+  {en:"search",zh:"搜尋"},
+  {en:"seat",zh:"座位"},
+  {en:"select",zh:"選擇"},
+  {en:"send",zh:"傳送"},
+  {en:"service",zh:"服務"},
+  {en:"set",zh:"設定"},
+  {en:"share",zh:"分享"},
+  {en:"sign",zh:"簽名、標誌"},
+  {en:"simple",zh:"簡單的"},
+  {en:"size",zh:"尺寸"},
+  {en:"software",zh:"軟體"},
+  {en:"speak",zh:"說話"},
+  {en:"specific",zh:"特定的"},
+  {en:"staff",zh:"員工"},
+  {en:"standard",zh:"標準"},
+  {en:"start",zh:"開始"},
+  {en:"state",zh:"聲明、狀態"},
+  {en:"station",zh:"車站"},
+  {en:"status",zh:"狀態"},
+  {en:"stay",zh:"停留"},
+  {en:"stop",zh:"停止"},
+  {en:"store",zh:"商店、儲存"},
+  {en:"street",zh:"街道"},
+  {en:"subject",zh:"主旨、科目"},
+  {en:"suitable",zh:"合適的"},
+  {en:"table",zh:"桌子、表格"},
+  {en:"talk",zh:"談話"},
+  {en:"task",zh:"任務"},
+  {en:"teach",zh:"教導"},
+  {en:"team",zh:"團隊"},
+  {en:"tell",zh:"告訴"},
+  {en:"test",zh:"測試"},
+  {en:"ticket",zh:"票"},
+  {en:"title",zh:"標題、職稱"},
+  {en:"topic",zh:"主題"},
+  {en:"tour",zh:"旅遊"},
+  {en:"track",zh:"追蹤"},
+  {en:"training",zh:"訓練"},
+  {en:"travel",zh:"旅行"},
+  {en:"trip",zh:"旅程"},
+  {en:"try",zh:"嘗試"},
+  {en:"type",zh:"類型、打字"},
+  {en:"typical",zh:"典型的"},
+  {en:"upload",zh:"上傳"},
+  {en:"use",zh:"使用"},
+  {en:"user",zh:"使用者"},
+  {en:"valid",zh:"有效的"},
+  {en:"version",zh:"版本"},
+  {en:"view",zh:"查看、觀點"},
+  {en:"visit",zh:"拜訪"},
+  {en:"wait",zh:"等待"},
+  {en:"week",zh:"週"},
+  {en:"window",zh:"視窗、窗戶"},
+  {en:"work",zh:"工作"},
+  {en:"write",zh:"寫"},
+  {en:"wrong",zh:"錯誤的"},
+  {en:"ability",zh:"能力"},
+  {en:"abroad",zh:"海外"},
+  {en:"absence",zh:"缺席"},
+  {en:"achievement",zh:"成就"},
+  {en:"activity",zh:"活動"},
+  {en:"addition",zh:"增加"},
+  {en:"advice",zh:"建議"},
+  {en:"agent",zh:"代理人"},
+  {en:"agreement",zh:"協議"},
+  {en:"answer",zh:"回答"},
+  {en:"apply",zh:"申請、應用"},
+  {en:"assignment",zh:"任務、作業"},
+  {en:"assistance",zh:"協助"},
+  {en:"attention",zh:"注意"},
+  {en:"audience",zh:"觀眾、聽眾"},
+  {en:"background",zh:"背景"},
+  {en:"batch",zh:"批次"},
+  {en:"block",zh:"阻擋、區塊"},
+  {en:"booking",zh:"預訂"},
+  {en:"breakdown",zh:"故障、分析"},
+  {en:"cafeteria",zh:"自助餐廳"},
+  {en:"catalog",zh:"目錄"},
+  {en:"certificate",zh:"證書"},
+  {en:"chairman",zh:"主席"},
+  {en:"client",zh:"客戶"},
+  {en:"closure",zh:"關閉"},
+  {en:"complaint",zh:"投訴"},
+  {en:"connection",zh:"連接"},
+  {en:"contract",zh:"合約"},
+  {en:"contribution",zh:"貢獻"},
+  {en:"convenience",zh:"便利"},
+  {en:"crew",zh:"工作人員"},
+  {en:"crowd",zh:"人群"},
+  {en:"customer",zh:"客戶"},
+  {en:"database",zh:"資料庫"},
+  {en:"deadline",zh:"截止期限"},
+  {en:"departure",zh:"出發"},
+  {en:"deposit",zh:"訂金"},
+  {en:"description",zh:"描述"},
+  {en:"discount",zh:"折扣"},
+  {en:"display",zh:"展示"},
+  {en:"distribution",zh:"配送"},
+  {en:"division",zh:"部門"},
+  {en:"documentation",zh:"文件"},
+  {en:"driver",zh:"司機"},
+  {en:"duration",zh:"持續時間"},
+  {en:"entrance",zh:"入口"},
+  {en:"environment",zh:"環境"},
+  {en:"equipment",zh:"設備"},
+  {en:"event",zh:"活動"},
+  {en:"experience",zh:"經驗"},
+  {en:"facility",zh:"設施"},
+  {en:"feedback",zh:"意見回饋"},
+  {en:"form",zh:"表格"},
+  {en:"format",zh:"格式"},
+  {en:"furniture",zh:"家具"},
+  {en:"gate",zh:"登機門"},
+  {en:"goal",zh:"目標"},
+  {en:"hallway",zh:"走廊"},
+  {en:"handout",zh:"講義"},
+  {en:"highlight",zh:"重點"},
+  {en:"hometown",zh:"故鄉"},
+  {en:"identity",zh:"身分"},
+  {en:"image",zh:"圖像"},
+  {en:"income",zh:"收入"},
+  {en:"index",zh:"索引"},
+  {en:"information",zh:"資訊"},
+  {en:"inquiry",zh:"詢問"},
+  {en:"interest",zh:"興趣、利息"},
+  {en:"introduction",zh:"介紹"},
+  {en:"invitation",zh:"邀請"},
+  {en:"job",zh:"工作"},
+  {en:"knowledge",zh:"知識"},
+  {en:"language",zh:"語言"},
+  {en:"layout",zh:"版面配置"},
+  {en:"lobby",zh:"大廳"},
+  {en:"location",zh:"地點"},
+  {en:"logo",zh:"標誌"},
+  {en:"maintenance",zh:"維護"},
+  {en:"manager",zh:"經理"},
+  {en:"map",zh:"地圖"},
+  {en:"material",zh:"材料"},
+  {en:"meal",zh:"餐點"},
+  {en:"membership",zh:"會員資格"},
+  {en:"mistake",zh:"錯誤"},
+  {en:"model",zh:"型號、模型"},
+  {en:"module",zh:"模組"},
+  {en:"name",zh:"姓名"},
+  {en:"network",zh:"網路、人脈"},
+  {en:"newsletter",zh:"電子報"},
+  {en:"notification",zh:"通知"},
+  {en:"objective",zh:"目標"},
+  {en:"opening",zh:"開幕、職缺"},
+  {en:"overview",zh:"概述"},
+  {en:"owner",zh:"負責人、老闆"},
+  {en:"package",zh:"套裝、包裹"},
+  {en:"participant",zh:"參與者"},
+  {en:"password",zh:"密碼"},
+  {en:"payment",zh:"付款"},
+  {en:"permission",zh:"許可"},
+  {en:"platform",zh:"平台"},
+  {en:"policy",zh:"政策"},
+  {en:"position",zh:"職位"},
+  {en:"presentation",zh:"報告、簡報"},
+  {en:"printer",zh:"印表機"},
+  {en:"profile",zh:"個人資料"},
+  {en:"project",zh:"專案"},
+  {en:"proposal",zh:"提案"},
+  {en:"province",zh:"省份"},
+  {en:"purpose",zh:"目的"},
+  {en:"queue",zh:"排隊"},
+  {en:"reason",zh:"原因"},
+  {en:"receipt",zh:"收據"},
+  {en:"reception",zh:"接待"},
+  {en:"recommendation",zh:"推薦"},
+  {en:"registration",zh:"報名、登記"},
+  {en:"relationship",zh:"關係"},
+  {en:"reminder",zh:"提醒"},
+  {en:"renovation",zh:"翻新"},
+  {en:"reservation",zh:"預約"},
+  {en:"resource",zh:"資源"},
+  {en:"response",zh:"回應"},
+  {en:"review",zh:"審查"},
+  {en:"reward",zh:"獎勵"},
+  {en:"safety",zh:"安全"},
+  {en:"sample",zh:"樣本"},
+  {en:"schedule",zh:"時程"},
+  {en:"section",zh:"部分"},
+  {en:"seminar",zh:"研討會"},
+  {en:"setting",zh:"設定"},
+  {en:"shipment",zh:"貨運"},
+  {en:"shortcut",zh:"捷徑"},
+  {en:"signature",zh:"簽名"},
+  {en:"skill",zh:"技能"},
+  {en:"solution",zh:"解決方案"},
+  {en:"speed",zh:"速度"},
+  {en:"storage",zh:"儲存"},
+  {en:"summary",zh:"摘要"},
+  {en:"system",zh:"系統"},
+  {en:"team",zh:"團隊"},
+  {en:"technology",zh:"技術"},
+  {en:"telephone",zh:"電話"},
+  {en:"template",zh:"範本"},
+  {en:"timeline",zh:"時間軸"},
+  {en:"tool",zh:"工具"},
+  {en:"update",zh:"更新"},
+  {en:"venue",zh:"場地"},
+  {en:"voucher",zh:"折價券"},
+  {en:"website",zh:"網站"},
+  {en:"workshop",zh:"工作坊"},
+  {en:"yearly",zh:"每年的"},
+];
+
+const VOCAB = [..._VOCAB_RAW, ...VOCAB_EASY];
+
+// Deduplicate
+const seen = new Set();
+const WORDS = VOCAB.filter(w => {
+  if(seen.has(w.en)){return false;}
+  seen.add(w.en);return true;
+});
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const REWARD_GOAL = 3000;
+const WORDS_PER_STAGE = 10;
+
+let state = {
+  totalScore: 0,
+  rewardCount: 0,
+  stagesCompleted: 0,
+  totalCorrect: 0,
+  totalAnswered: 0,
+  bookmarked: new Set(),
+  wrongWords: new Set(),
+  // current game
+  stageNum: 1,
+  stageWords: [],
+  stageWordIdx: 0,
+  stageScore: 0,
+  stageCorrects: 0,
+  stageResults: [],
+  stageBookmarked: new Set(),
+  currentUserAnswer: '',
+  currentIsCorrect: false,
+};
+
+function saveLocalOnly() {
+  const s = {...state,
+    bookmarked: [...state.bookmarked],
+    wrongWords: [...state.wrongWords],
+    stageBookmarked: [...state.stageBookmarked],
+  };
+  const key = currentUser ? 'toeic_mimi_' + currentUser.uid : 'toeic_mimi_guest';
+  localStorage.setItem(key, JSON.stringify(s));
+}
+
+function saveState() {
+  saveLocalOnly();
+  if (currentUser) {
+    saveToCloud(currentUser.uid);
+  }
+}
+
+function loadState(){
+  try{
+    // 啟動時載入訪客快取（auth 尚未解析）
+    // 登入後由 loadFromCloud 覆蓋為該帳號的資料
+    const raw = localStorage.getItem('toeic_mimi_guest')
+             || localStorage.getItem('toeic_mimi_state'); // 相容舊版 key
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    state = {...state,...s,
+      bookmarked: new Set(s.bookmarked||[]),
+      wrongWords: new Set(s.wrongWords||[]),
+      stageBookmarked: new Set(s.stageBookmarked||[]),
+    };
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════
+// ANSWER COMPARISON (smart fuzzy)
+// ════════════════════════════════════════════
+// 中文同義詞組（可自由擴充）
+const ZH_SYN_GROUPS = [
+  ['軟體','應用程式','程式','app','應用'],
+  ['費用','支出','花費','成本','收費','款項'],
+  ['獲得','取得','得到','拿到'],
+  ['員工','職員','人員','工作人員','工作者'],
+  ['電腦','計算機'],
+  ['通知','告知','知會'],
+  ['出席','參加','參與','與會'],
+  ['預訂','預約','訂位','訂房'],
+  ['修理','修復','修繕','維修'],
+  ['回應','回覆','答覆'],
+  ['訊息','消息','信息','留言'],
+  ['裝置','設備','器材','設施'],
+  ['選擇','挑選','揀選'],
+  ['登記','註冊','報名'],
+  ['彈性','靈活'],
+  ['遷移','搬遷','移動','調遷'],
+  ['薪水','薪資','薪酬','待遇','工資'],
+  ['商業','商務'],
+  ['方法','方式','途徑'],
+  ['合作','協作','協力'],
+  ['廣告','宣傳','廣宣'],
+  ['截止','期限','到期'],
+  ['調整','修正','校正'],
+  ['提升','提高','增強','改善','強化'],
+  ['確認','核實','確定'],
+  ['展示','顯示','呈現'],
+  ['評估','評量','評定'],
+  ['招募','招聘','徵才'],
+  ['提供','供給','供應'],
+  ['建立','設立','成立','創立'],
+  ['聯繫','聯絡','接觸'],
+  ['更新','升級'],
+  ['購買','採購','購置'],
+  ['計劃','計畫','規劃'],
+  ['退還','退款','退回'],
+  ['增加','提高','上升'],
+  ['減少','降低','縮減'],
+  ['重要的','關鍵的','重大的'],
+  ['傳送','發送','寄送'],
+  ['管理','行政'],
+  ['解決','處理'],
+  ['包含','包括','涵蓋'],
+  ['說明','解釋','闡述'],
+  ['完成','達成','實現','做好'],
+  ['分配','撥出','指派'],
+  ['資料','數據','數資'],
+  ['結果','成果','成效'],
+  ['策略','戰略','方針'],
+  ['目標','目的','宗旨'],
+  ['問題','疑問','議題'],
+  ['報告','報表','報導'],
+  ['文件','文檔','文書'],
+  ['服務','業務','事務'],
+  ['產品','商品','製品'],
+];
+
+// 建立快速查找 Map
+const ZH_SYN_MAP = {};
+for (const group of ZH_SYN_GROUPS) {
+  for (const w of group) {
+    ZH_SYN_MAP[w] = group;
+  }
+}
+
+function normalize(str){
+  return str.trim()
+    .replace(/[，。、！？\s「」【】（）()的地得]/g,'')
+    .toLowerCase();
+}
+
+function compareAnswers(userAns, correctAns){
+  if(!userAns || userAns.trim().length === 0) return false;
+  const u = normalize(userAns);
+  const c = normalize(correctAns);
+  if(!u) return false;
+  if(u === c) return true;
+
+  const segments = correctAns.split(/[、，\/]/);
+
+  for(const seg of segments){
+    const sn = normalize(seg);
+    const segRaw = seg.trim();
+    if(!sn) continue;
+
+    // 完全相符
+    if(u === sn) return true;
+    // 包含關係
+    if(sn.length >= 2 && u.includes(sn)) return true;
+    if(u.length >= 2 && sn.includes(u)) return true;
+
+    // 同義詞比對
+    const segGroup = ZH_SYN_MAP[segRaw];
+    if(segGroup && segGroup.some(syn => normalize(syn) === u)) return true;
+    const userGroup = ZH_SYN_MAP[userAns.trim()];
+    if(userGroup && userGroup.some(syn => normalize(syn) === sn)) return true;
+  }
+
+  // 字元重疊率（放寬至 0.6）
+  const chars = [...c];
+  const overlap = [...u].filter(ch => chars.includes(ch)).length;
+  const ratio = overlap / Math.max(u.length, c.length);
+  if(ratio >= 0.6 && u.length >= 2) return true;
+
+  return false;
+}
+
+// ════════════════════════════════════════════
+// SOUND EFFECTS (Web Audio API，不需外部檔案)
+// ════════════════════════════════════════════
+function playSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (type === 'correct') {
+      // 叮咚三音上升
+      [[523.25, 0], [659.25, 0.12], [783.99, 0.24]].forEach(([freq, t]) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + t);
+        gain.gain.setValueAtTime(0.28, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.35);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.35);
+      });
+    } else {
+      // 低沉兩音下降
+      [[280, 0], [200, 0.18]].forEach(([freq, t]) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + t);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.25);
+      });
+    }
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════════
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='home') updateHomeUI();
+  if(name==='notebook') renderNotebook();
+}
+
+// ════════════════════════════════════════════
+// HOME UI
+// ════════════════════════════════════════════
+function updateHomeUI(){
+  document.getElementById('home-score').textContent = state.totalScore.toLocaleString();
+  document.getElementById('home-rewards').textContent = state.rewardCount;
+
+  const progressInCycle = state.totalScore % REWARD_GOAL;
+  const pct = Math.round(progressInCycle / REWARD_GOAL * 100);
+  document.getElementById('home-pct').textContent = pct + '%';
+  document.getElementById('home-progress').style.width = pct + '%';
+  const remaining = REWARD_GOAL - progressInCycle;
+  document.getElementById('home-progress-text').textContent =
+    progressInCycle === 0 && state.totalScore > 0
+      ? '🎊 剛完成一次循環！繼續累積吧！'
+      : `還差 ${remaining.toLocaleString()} 分可獲得大餐！`;
+
+  const statsEl = document.getElementById('home-stats');
+  if(state.stagesCompleted > 0){
+    statsEl.style.display = 'block';
+    document.getElementById('stat-stages').textContent = state.stagesCompleted;
+    document.getElementById('stat-correct').textContent = state.totalCorrect;
+    const acc = state.totalAnswered > 0 ? Math.round(state.totalCorrect/state.totalAnswered*100) : 0;
+    document.getElementById('stat-acc').textContent = acc + '%';
+  }
+}
+
+// ════════════════════════════════════════════
+// GAME LOGIC
+// ════════════════════════════════════════════
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startGame(){
+  const indices = shuffle([...Array(WORDS.length).keys()]).slice(0, WORDS_PER_STAGE);
+  state.stageWords = indices;
+  state.stageWordIdx = 0;
+  state.stageScore = 0;
+  state.stageCorrects = 0;
+  state.stageResults = [];
+  state.stageBookmarked = new Set();
+  state.stageNum = state.stagesCompleted + 1;
+  showScreen('game');
+  renderGameWord();
+}
+
+function renderGameWord(){
+  const idx = state.stageWords[state.stageWordIdx];
+  const word = WORDS[idx];
+  document.getElementById('game-stage').textContent = state.stageNum;
+  document.getElementById('game-qnum').textContent = state.stageWordIdx + 1;
+  document.getElementById('game-word-num').textContent = '#' + (idx+1);
+  document.getElementById('game-english').textContent = word.en;
+  document.getElementById('game-score').innerHTML = state.stageScore + ' <span>分</span>';
+  document.getElementById('game-input').value = '';
+  document.getElementById('game-input').focus();
+
+  const posEl = document.getElementById('game-pos');
+  if (word.pos) {
+    posEl.textContent = word.pos;
+    posEl.style.display = 'inline-block';
+  } else {
+    posEl.style.display = 'none';
+  }
+
+  const isBookmarked = state.bookmarked.has(idx) || state.stageBookmarked.has(idx);
+  document.getElementById('game-bookmark').textContent = '🔖';
+  document.getElementById('game-bookmark').style.opacity = isBookmarked ? '1' : '0.35';
+
+  renderDots();
+}
+
+function renderDots(){
+  const container = document.getElementById('game-dots');
+  container.innerHTML = '';
+  for(let i=0; i<WORDS_PER_STAGE; i++){
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    if(i < state.stageWordIdx){
+      dot.classList.add(state.stageResults[i] === 'correct' ? 'correct-dot' : 'wrong-dot');
+    } else if(i === state.stageWordIdx){
+      dot.classList.add('current');
+    }
+    container.appendChild(dot);
+  }
+}
+
+function toggleBookmark(){
+  const idx = state.stageWords[state.stageWordIdx];
+  if(state.stageBookmarked.has(idx)){
+    state.stageBookmarked.delete(idx);
+    state.bookmarked.delete(idx);
+    document.getElementById('game-bookmark').style.opacity = '0.35';
+  } else {
+    state.stageBookmarked.add(idx);
+    state.bookmarked.add(idx);
+    document.getElementById('game-bookmark').style.opacity = '1';
+    const btn = document.getElementById('game-bookmark');
+    btn.style.transform = 'scale(1.4)';
+    setTimeout(()=>btn.style.transform='',200);
+  }
+  saveState();
+}
+
+function revealAnswer(){
+  const idx = state.stageWords[state.stageWordIdx];
+  const word = WORDS[idx];
+  const userAns = document.getElementById('game-input').value.trim();
+  const isCorrect = compareAnswers(userAns, word.zh);
+
+  state.currentIsCorrect = isCorrect;
+  state.currentUserAnswer = userAns;
+  state.stageResults.push(isCorrect ? 'correct' : 'wrong');
+
+  if(isCorrect){
+    state.stageScore += 10;
+    state.stageCorrects++;
+    state.totalCorrect++;
+  } else {
+    state.wrongWords.add(idx);
+    if(!state.stageBookmarked.has(idx)){
+      state.bookmarked.add(idx);
+    }
+  }
+  state.totalAnswered++;
+
+  document.getElementById('rv-stage').textContent = state.stageNum;
+  document.getElementById('rv-qnum').textContent = state.stageWordIdx + 1;
+  document.getElementById('rv-english').textContent = word.en;
+  document.getElementById('rv-chinese').textContent = word.zh;
+  document.getElementById('rv-correct-ans').textContent = word.zh;
+  document.getElementById('rv-your-ans').textContent = userAns || '（未作答）';
+
+  // 詞性
+  const rvPos = document.getElementById('rv-pos');
+  if (word.pos) {
+    rvPos.className = 'pos-badge';
+    rvPos.textContent = word.pos;
+    rvPos.style.display = 'inline-block';
+  } else { rvPos.style.display = 'none'; }
+
+  // 例句（將英文單字本身加粗斜體）
+  const exCard = document.getElementById('rv-example');
+  const exText = document.getElementById('rv-example-text');
+  if (word.ex) {
+    const escaped = word.ex.replace(/</g,'&lt;');
+    const re = new RegExp('\\b(' + word.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')\\b','gi');
+    exText.innerHTML = escaped.replace(re, '<em>$1</em>');
+    exCard.style.display = 'block';
+  } else { exCard.style.display = 'none'; }
+
+  playSound(isCorrect ? 'correct' : 'wrong');
+
+  const badge = document.getElementById('rv-badge');
+  const icon = document.getElementById('rv-icon');
+  const resultText = document.getElementById('rv-result-text');
+  const points = document.getElementById('rv-points');
+
+  if(isCorrect){
+    badge.className = 'result-badge correct';
+    icon.textContent = '✅';
+    resultText.className = 'result-text correct';
+    resultText.textContent = '答對了！太棒了！';
+    points.className = 'result-points correct';
+    points.textContent = '+10 分';
+  } else {
+    badge.className = 'result-badge wrong';
+    icon.textContent = '❌';
+    resultText.className = 'result-text wrong';
+    resultText.textContent = userAns ? '答錯了，再加油！' : '沒有作答喔！';
+    points.className = 'result-points';
+    points.style.color = 'var(--error)';
+    points.textContent = '+0 分・已加入錯題本';
+  }
+
+  const isLastWord = state.stageWordIdx === WORDS_PER_STAGE - 1;
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.textContent = isLastWord ? '查看本關成績 🏁' : '繼續下一題 →';
+
+  // 答錯才顯示手動判對按鈕
+  document.getElementById('override-btn').style.display = isCorrect ? 'none' : 'block';
+
+  saveState();
+  showScreen('reveal');
+}
+
+function markAsCorrect(){
+  if(state.currentIsCorrect) return;
+  state.currentIsCorrect = true;
+  state.stageScore += 10;
+  state.stageCorrects++;
+  state.totalCorrect++;
+
+  const idx = state.stageWords[state.stageWordIdx];
+  state.wrongWords.delete(idx);
+  // 若書籤是答錯自動加入的（非手動），一起移除
+  if(!state.stageBookmarked.has(idx)) state.bookmarked.delete(idx);
+  // 更新本關結果紀錄
+  state.stageResults[state.stageResults.length - 1] = 'correct';
+
+  // 更新分數顯示
+  document.getElementById('game-score').innerHTML = state.stageScore + ' <span>分</span>';
+
+  // 更新結果卡片
+  const badge = document.getElementById('rv-badge');
+  badge.className = 'result-badge correct';
+  document.getElementById('rv-icon').textContent = '✅';
+  const rt = document.getElementById('rv-result-text');
+  rt.className = 'result-text correct';
+  rt.textContent = '手動判對！已加 10 分';
+  const pts = document.getElementById('rv-points');
+  pts.className = 'result-points correct';
+  pts.textContent = '+10 分';
+
+  document.getElementById('override-btn').style.display = 'none';
+  saveState();
+}
+
+function nextWord(){
+  const isLast = state.stageWordIdx === WORDS_PER_STAGE - 1;
+  state.stageWordIdx++;
+
+  if(isLast){
+    state.stagesCompleted++;
+    state.totalScore += state.stageScore;
+
+    const prevCycle = Math.floor((state.totalScore - state.stageScore) / REWARD_GOAL);
+    const newCycle  = Math.floor(state.totalScore / REWARD_GOAL);
+    const gotReward = newCycle > prevCycle;
+
+    saveState();
+    showStageComplete(gotReward, newCycle);
+  } else {
+    showScreen('game');
+    renderGameWord();
+  }
+}
+
+function showStageComplete(gotReward, rewardCount){
+  document.getElementById('cp-stage').textContent = state.stageNum;
+  document.getElementById('cp-stage-score').textContent = state.stageScore;
+  document.getElementById('cp-correct').textContent = state.stageCorrects;
+  document.getElementById('cp-total').textContent = state.totalScore.toLocaleString();
+
+  const progressInCycle = state.totalScore % REWARD_GOAL;
+  const pct = Math.round(progressInCycle / REWARD_GOAL * 100);
+  document.getElementById('cp-pct').textContent = pct + '%';
+  document.getElementById('cp-progress').style.width = pct + '%';
+  const remaining = REWARD_GOAL - progressInCycle;
+  document.getElementById('cp-goal-text').textContent =
+    gotReward ? '🎊 剛完成一次循環！繼續累積！' : `還差 ${remaining.toLocaleString()} 分`;
+
+  showScreen('complete');
+
+  if(gotReward){
+    state.rewardCount = rewardCount;
+    saveState();
+    setTimeout(()=>showReward(rewardCount), 600);
+  }
+}
+
+function nextStage(){ startGame(); }
+
+function showReward(count){
+  document.getElementById('popup-count').textContent = count;
+  document.getElementById('reward-overlay').classList.remove('hidden');
+}
+function closeReward(){
+  document.getElementById('reward-overlay').classList.add('hidden');
+}
+
+function confirmQuit(){
+  if(state.stageWordIdx === 0 || confirm('確定要放棄這關？（進度不計分）')){
+    showScreen('home');
+  }
+}
+
+// ════════════════════════════════════════════
+// NOTEBOOK
+// ════════════════════════════════════════════
+let currentTab = 'all';
+
+function switchTab(tab){
+  currentTab = tab;
+  ['all','bookmark','wrong'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  renderNotebook();
+}
+
+function renderNotebook(){
+  const container = document.getElementById('notebook-content');
+  const countEl   = document.getElementById('notebook-count');
+
+  let items = [];
+  if(currentTab === 'all'){
+    const allIdx = new Set([...state.bookmarked, ...state.wrongWords]);
+    items = [...allIdx].map(i=>({idx:i, isBookmarked: state.bookmarked.has(i), isWrong: state.wrongWords.has(i)}));
+  } else if(currentTab === 'bookmark'){
+    items = [...state.bookmarked].map(i=>({idx:i, isBookmarked:true, isWrong: state.wrongWords.has(i)}));
+  } else {
+    items = [...state.wrongWords].map(i=>({idx:i, isBookmarked: state.bookmarked.has(i), isWrong:true}));
+  }
+
+  countEl.textContent = items.length + ' 個單字';
+
+  if(items.length === 0){
+    container.innerHTML = `
+      <div class="notebook-empty">
+        <div class="emoji">📭</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text)">這裡空空的</div>
+        <div>書籤和錯題都會出現在這裡</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  const list = document.createElement('div');
+  list.className = 'notebook-list';
+  items.forEach(({idx, isBookmarked, isWrong})=>{
+    const word = WORDS[idx];
+    const item = document.createElement('div');
+    item.className = 'notebook-item';
+    const tags = [];
+    if(isBookmarked && !isWrong) tags.push('<span class="tag-small tag-bookmarked">🔖 書籤</span>');
+    if(isWrong) tags.push('<span class="tag-small tag-wrong">❌ 錯題</span>');
+    if(isBookmarked && isWrong) tags.push('<span class="tag-small tag-bookmarked">🔖</span>');
+
+    item.innerHTML = `
+      <div class="notebook-icon">${isWrong?'❌':'🔖'}</div>
+      <div class="notebook-words">
+        <div class="notebook-en">${word.en}</div>
+        <div class="notebook-zh">${word.zh}</div>
+        <div class="notebook-tags">${tags.join('')}</div>
+      </div>
+      <button class="clear-btn" onclick="removeFromNotebook(${idx})" title="移除">✕</button>
+    `;
+    list.appendChild(item);
+  });
+  container.appendChild(list);
+}
+
+function removeFromNotebook(idx){
+  state.bookmarked.delete(idx);
+  state.wrongWords.delete(idx);
+  saveState();
+  renderNotebook();
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+loadState();
+showScreen('home');
+// updateAuthUI called by onAuthStateChanged after Firebase resolves;
+// show logged-out state initially
+updateAuthUI(null);
+</script>
+</body>
+</html>
+light-color:transparent}
+:root{
+  --bg:#F0EEFF;
+  --primary:#7C6FCD;
+  --primary-dark:#5D50B5;
+  --primary-light:#EDE9FF;
+  --accent:#F7B731;
+  --accent-light:#FFF3CD;
+  --success:#4CAF88;
+  --error:#FF6B6B;
+  --text:#2D2D3A;
+  --text-muted:#9090A8;
+  --card:#FFFFFF;
+  --shadow:0 4px 24px rgba(124,111,205,0.18);
+  --radius:20px;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  max-width:430px;
+  margin:0 auto;
+  overflow-x:hidden;
+  position:relative;
+}
+.screen{display:none;flex-direction:column;min-height:100vh;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── HEADER ─── */
+.header{
+  background:linear-gradient(135deg,#7C6FCD 0%,#9B8FE8 100%);
+  padding:52px 24px 28px;
+  color:white;
+  position:relative;
+  overflow:hidden;
+}
+.header::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+}
+.header::after{
+  content:'';position:absolute;bottom:-60px;left:-30px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+}
+.header-title{font-size:26px;font-weight:800;letter-spacing:.5px;position:relative;z-index:1}
+.header-sub{font-size:13px;opacity:.8;margin-top:3px;position:relative;z-index:1}
+.back-btn{
+  position:absolute;top:52px;left:20px;
+  background:rgba(255,255,255,.2);border:none;color:white;
+  width:36px;height:36px;border-radius:50%;font-size:18px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;
+}
+
+/* ─── CARDS ─── */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:24px;
+}
+.content{padding:20px;flex:1;display:flex;flex-direction:column;gap:16px}
+
+/* ─── HOME ─── */
+.score-card{
+  background:linear-gradient(135deg,#7C6FCD,#9B8FE8);
+  border-radius:var(--radius);padding:28px 24px;color:white;
+  box-shadow:0 8px 32px rgba(124,111,205,.35);
+  position:relative;overflow:hidden;
+}
+.score-card::before{
+  content:'🏆';position:absolute;right:20px;top:50%;
+  transform:translateY(-50%);font-size:64px;opacity:.15;
+}
+.score-label{font-size:13px;opacity:.8;margin-bottom:6px}
+.score-value{font-size:52px;font-weight:900;letter-spacing:-1px}
+.score-unit{font-size:16px;font-weight:600;opacity:.8}
+.reward-info{font-size:13px;opacity:.85;margin-top:8px;display:flex;align-items:center;gap:6px}
+
+/* Progress bar */
+.progress-section{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.progress-label{font-size:14px;font-weight:600;color:var(--text)}
+.progress-pct{font-size:13px;color:var(--primary);font-weight:700}
+.progress-bar-bg{
+  height:12px;background:#EDE9FF;border-radius:99px;overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#F7B731,#FF9A3C);
+  transition:width .6s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+}
+.progress-bar-fill::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:20px;
+  background:rgba(255,255,255,.35);border-radius:99px;
+}
+.progress-goal{font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center}
+
+/* Buttons */
+.btn{
+  border:none;border-radius:14px;font-size:16px;font-weight:700;
+  padding:16px 24px;cursor:pointer;transition:all .15s ease;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,#7C6FCD,#9B8FE8);color:white;box-shadow:0 4px 16px rgba(124,111,205,.4)}
+.btn-secondary{background:white;color:var(--primary);border:2px solid var(--primary-light)}
+.btn-success{background:linear-gradient(135deg,#4CAF88,#56D99A);color:white;box-shadow:0 4px 16px rgba(76,175,136,.35)}
+.btn-gold{background:linear-gradient(135deg,#F7B731,#FF9A3C);color:white;box-shadow:0 4px 16px rgba(247,183,49,.4)}
+.btn-sm{padding:10px 18px;font-size:14px;border-radius:10px;width:auto}
+.btn-icon{width:44px;height:44px;padding:0;border-radius:50%;font-size:20px}
+
+/* ─── AUTH BAR ─── */
+.auth-bar{
+  background:var(--card);border-radius:16px;
+  padding:14px 18px;box-shadow:var(--shadow);
+}
+.auth-state{display:flex;align-items:center;width:100%}
+.auth-state.hidden{display:none}
+.btn-google{
+  background:white;border:1.5px solid #E0E0E0;border-radius:10px;
+  padding:11px 16px;display:flex;align-items:center;gap:10px;
+  font-size:14px;font-weight:600;color:#3C4043;cursor:pointer;
+  width:100%;justify-content:center;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+  font-family:inherit;transition:all .15s;
+}
+.btn-google:active{transform:scale(.97)}
+.btn-google .g-logo{width:18px;height:18px;flex-shrink:0}
+.auth-user{display:flex;align-items:center;gap:10px;width:100%}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;
+  border:2px solid var(--primary-light);
+  object-fit:cover;flex-shrink:0;
+  background:var(--primary-light);
+}
+.user-name{
+  flex:1;font-size:14px;font-weight:600;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;
+}
+.sync-status{
+  font-size:11px;font-weight:600;color:var(--success);
+  white-space:nowrap;
+}
+.sync-status.syncing{color:var(--text-muted)}
+.sync-status.error{color:var(--error)}
+.btn-logout{
+  background:none;border:1px solid #E0E0E0;border-radius:8px;
+  padding:5px 10px;font-size:12px;color:var(--text-muted);
+  cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;
+  flex-shrink:0;
+}
+.btn-logout:active{transform:scale(.97)}
+
+/* ─── SETUP GUIDE ─── */
+.setup-scroll{max-height:60vh;overflow-y:auto;margin-bottom:20px;text-align:left}
+.setup-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.step-num{
+  background:var(--primary);color:white;width:22px;height:22px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;
+}
+.step-text{font-size:13px;line-height:1.6;color:var(--text)}
+.step-text code{
+  background:var(--bg);padding:1px 5px;border-radius:4px;
+  font-family:monospace;font-size:11px;word-break:break-all;
+}
+.step-text a{color:var(--primary);text-decoration:none;font-weight:600}
+.rules-box{
+  background:var(--bg);border-radius:10px;padding:10px 12px;
+  font-family:monospace;font-size:11px;color:var(--text);
+  white-space:pre;overflow-x:auto;margin-top:6px;
+  line-height:1.5;
+}
+
+/* ─── GAME SCREEN ─── */
+.stage-info{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card);border-radius:14px;padding:14px 18px;
+  box-shadow:var(--shadow);
+}
+.stage-text{font-size:13px;color:var(--text-muted);font-weight:500}
+.stage-score{font-size:22px;font-weight:800;color:var(--primary)}
+.stage-score span{font-size:13px;color:var(--text-muted);font-weight:500}
+
+.word-card{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:36px 28px;
+  text-align:center;position:relative;
+}
+.word-number{
+  position:absolute;top:16px;left:20px;
+  font-size:12px;color:var(--text-muted);font-weight:600;
+  background:var(--bg);padding:4px 10px;border-radius:99px;
+}
+.bookmark-btn{
+  position:absolute;top:14px;right:14px;
+  background:none;border:none;font-size:26px;cursor:pointer;
+  transition:transform .2s ease;padding:4px;
+}
+.bookmark-btn:active{transform:scale(.85)}
+.english-word{
+  font-size:36px;font-weight:900;color:var(--text);
+  letter-spacing:-1px;margin-bottom:8px;margin-top:16px;
+  font-style:italic;
+}
+.word-hint{font-size:13px;color:var(--text-muted)}
+
+.answer-input{
+  background:var(--card);border-radius:14px;
+  box-shadow:var(--shadow);padding:0;overflow:hidden;
+}
+.answer-input input{
+  width:100%;padding:18px 20px;font-size:18px;
+  border:2px solid transparent;border-radius:14px;outline:none;
+  font-family:inherit;color:var(--text);
+  transition:border-color .2s;background:transparent;
+}
+.answer-input input:focus{border-color:var(--primary)}
+.answer-input input::placeholder{color:var(--text-muted);font-size:16px}
+
+/* ─── REVEAL SCREEN ─── */
+.result-badge{
+  border-radius:16px;padding:20px 24px;text-align:center;margin-bottom:4px;
+}
+.result-badge.correct{background:linear-gradient(135deg,#E8FFF4,#D4F7E7);border:2px solid #4CAF88}
+.result-badge.wrong{background:linear-gradient(135deg,#FFF0F0,#FFE0E0);border:2px solid #FF6B6B}
+.result-icon{font-size:40px;margin-bottom:8px}
+.result-text{font-size:18px;font-weight:800}
+.result-text.correct{color:#2E9E6B}
+.result-text.wrong{color:#E84C4C}
+.result-points{font-size:14px;font-weight:600;margin-top:4px}
+.result-points.correct{color:#4CAF88}
+
+.answer-compare{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.answer-row{padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
+.answer-row+.answer-row{border-top:1px solid var(--bg)}
+.answer-tag{
+  font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;
+  white-space:nowrap;margin-top:2px;
+}
+.tag-correct{background:#E8FFF4;color:#2E9E6B}
+.tag-yours{background:var(--primary-light);color:var(--primary)}
+.answer-word{font-size:17px;font-weight:600;color:var(--text);flex:1}
+
+.word-reveal-big{
+  background:linear-gradient(135deg,var(--primary-light),#F5F3FF);
+  border-radius:16px;padding:20px 24px;text-align:center;
+}
+.word-reveal-en{font-size:32px;font-weight:900;color:var(--primary);font-style:italic}
+.word-reveal-zh{font-size:16px;color:var(--text-muted);margin-top:6px;font-weight:500}
+
+/* ─── STAGE COMPLETE ─── */
+.stage-complete-card{
+  background:linear-gradient(135deg,#7C6FCD,#9B8FE8);
+  border-radius:var(--radius);padding:36px 28px;text-align:center;
+  color:white;box-shadow:0 8px 32px rgba(124,111,205,.4);
+}
+.complete-emoji{font-size:56px;margin-bottom:12px}
+.complete-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.complete-sub{font-size:14px;opacity:.8}
+.stage-result-row{
+  display:flex;justify-content:space-between;background:var(--card);
+  border-radius:14px;padding:16px 20px;box-shadow:var(--shadow);
+}
+.result-stat{text-align:center}
+.stat-val{font-size:28px;font-weight:900;color:var(--primary)}
+.stat-label{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* ─── REWARD POPUP ─── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:24px;animation:fadeIn .2s ease;
+}
+.overlay.hidden{display:none}
+.popup{
+  background:white;border-radius:28px;padding:40px 28px;
+  text-align:center;width:100%;max-width:340px;
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.popup-emoji{font-size:72px;margin-bottom:16px}
+.popup-title{font-size:26px;font-weight:900;color:var(--text);margin-bottom:8px}
+.popup-desc{font-size:15px;color:var(--text-muted);line-height:1.6;margin-bottom:28px}
+
+/* ─── NOTEBOOK ─── */
+.notebook-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:var(--text-muted);padding:40px;text-align:center;
+}
+.notebook-empty .emoji{font-size:56px}
+.notebook-list{display:flex;flex-direction:column;gap:10px}
+.notebook-item{
+  background:var(--card);border-radius:14px;padding:16px 18px;
+  box-shadow:0 2px 12px rgba(124,111,205,.1);
+  display:flex;align-items:center;gap:14px;
+}
+.notebook-icon{font-size:22px;flex-shrink:0}
+.notebook-words{flex:1}
+.notebook-en{font-size:18px;font-weight:800;color:var(--text);font-style:italic}
+.notebook-zh{font-size:14px;color:var(--text-muted);margin-top:3px}
+.notebook-tags{display:flex;gap:6px;margin-top:6px}
+.tag-small{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+.tag-bookmarked{background:#EDE9FF;color:var(--primary)}
+.tag-wrong{background:#FFE8E8;color:var(--error)}
+.clear-btn{
+  background:none;border:none;font-size:16px;color:var(--text-muted);
+  cursor:pointer;padding:4px;
+}
+
+/* ─── DOTS PROGRESS ─── */
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:4px 0}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#DDD8FF;transition:all .2s ease;
+}
+.dot.done{background:var(--primary)}
+.dot.correct-dot{background:var(--success)}
+.dot.wrong-dot{background:var(--error)}
+.dot.current{background:var(--primary);box-shadow:0 0 0 3px rgba(124,111,205,.3);transform:scale(1.2)}
+
+/* ─── TABS ─── */
+.tab-row{display:flex;background:var(--card);border-radius:12px;padding:4px;gap:4px;box-shadow:var(--shadow)}
+.tab{
+  flex:1;padding:10px;text-align:center;border-radius:9px;font-size:13px;
+  font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .2s;border:none;background:none;
+}
+.tab.active{background:var(--primary);color:white}
+
 /* utility */
 .flex-row{display:flex;gap:12px}
 .flex-row .btn{flex:1}
